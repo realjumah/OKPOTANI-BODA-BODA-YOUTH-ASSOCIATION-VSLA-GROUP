@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Savings Group Book</title>
+<style>
+:root{--ink:#1b2a41;--paper:#f6f8fa;--card:#fff;--maize:#e8b100;--leaf:#2e7d5b;--red:#b3261e;--line:#d5dce4}
+@media(prefers-color-scheme:dark){:root{--ink:#e6edf5;--paper:#12181f;--card:#1a222c;--line:#2d3844;--maize:#f0c030;--leaf:#4fb286;--red:#f0716a}}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink)}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--ink);color:var(--paper)}
+header h1{font-size:1.1rem;margin:0}
+main{max-width:640px;margin:0 auto;padding:16px}
+nav{display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--line)}
+nav button{flex:1;padding:10px 4px;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;color:inherit;font:inherit;cursor:pointer}
+nav button.on{border-color:var(--maize);font-weight:700}
+.box{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
+h2{font-size:1.05rem;margin:0 0 10px}
+label{display:block;font-size:.9rem;margin:8px 0 2px}
+input,select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:inherit}
+button.pri{margin-top:12px;width:100%;padding:12px;font:inherit;font-weight:700;background:var(--maize);color:#1b2a41;border:0;border-radius:4px;cursor:pointer}
+button.lnk{background:none;border:0;color:var(--red);font:inherit;cursor:pointer;padding:4px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.sub{font-size:.85rem;opacity:.7}
+.num{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.big{font-size:1.6rem;font-weight:700}
+.stat{display:flex;gap:12px;flex-wrap:wrap}.stat>div{flex:1;min-width:120px}
+#msg{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:4px;display:none}
+.sync{font-size:.8rem}
+</style>
+</head>
+<body>
+<header><h1>Savings Group Book</h1><span class="sync" id="sync"></span></header>
+<main id="main"></main>
+<div id="msg" role="status"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,deleteDoc,onSnapshot,query,where,orderBy,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 1. PASTE YOUR FIREBASE CONFIG HERE (Project settings > Your apps > Web) */
+const firebaseConfig = {
+  apiKey: "AIzaSyAa46jt-G7Ma4aH8MHxvPnLf13L2yvgFpM",
+  authDomain: "vsla-app-d70dd.firebaseapp.com",
+  projectId: "vsla-app-d70dd",
+  storageBucket: "vsla-app-d70dd.firebasestorage.app",
+  messagingSenderId: "797658721016",
+  appId: "1:797658721016:web:a05a0d765d218d543da90d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+// Offline cache: data entered without internet is saved on the phone and syncs automatically.
+const db = initializeFirestore(app, {localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})});
+
+const S = {user:null, groups:[], gid:null, members:[], savings:[], loans:[], repayments:[], tab:"members"};
+let unsubs = [];
+const $ = s => document.querySelector(s);
+const money = n => Math.round(n||0).toLocaleString();
+const today = () => new Date().toISOString().slice(0,10);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toast = t => {const m=$("#msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",2500)};
+const curGroup = () => S.groups.find(g=>g.id===S.gid);
+const mName = id => (S.members.find(m=>m.id===id)||{}).name || "Unknown";
+const gcol = (name) => collection(db,"groups",S.gid,name);
+
+window.addEventListener("online",()=>$("#sync").textContent="Online");
+window.addEventListener("offline",()=>$("#sync").textContent="Offline: saving on phone");
+
+/* ---------- AUTH (phone number + 6-digit PIN) ---------- */
+const emailOf = phone => phone.replace(/\D/g,"") + "@savingsbook.app";
+
+function showLogin(){
+  unsubs.forEach(u=>u()); unsubs=[];
+  $("#main").innerHTML = `<div class="box"><h2>Sign in</h2>
+    <label for="ph">Phone number</label><input id="ph" inputmode="tel" placeholder="0772123456">
+    <label for="pin">6-digit PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="6">
+    <button class="pri" id="in">Sign in</button>
+    <button class="pri" id="up" style="background:var(--leaf);color:#fff">Create account</button></div>`;
+  const run = async fn => {
+    const ph=$("#ph").value, pin=$("#pin").value;
+    if(ph.replace(/\D/g,"").length<9||!/^\d{6}$/.test(pin)) return toast("Enter a valid phone number and a 6-digit PIN");
+    try{await fn(auth,emailOf(ph),pin)}catch(e){toast(e.code==="auth/invalid-credential"?"Wrong phone number or PIN":e.code==="auth/email-already-in-use"?"Account exists. Sign in instead":"Could not sign in: "+e.code)}
+  };
+  $("#in").onclick=()=>run(signInWithEmailAndPassword);
+  $("#up").onclick=()=>run(createUserWithEmailAndPassword);
+}
+
+onAuthStateChanged(auth, u => {
+  S.user = u;
+  if(!u) return showLogin();
+  unsubs.forEach(f=>f()); unsubs=[];
+  unsubs.push(onSnapshot(query(collection(db,"groups"),where("ownerId","==",u.uid)), snap=>{
+    S.groups = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!S.groups.find(g=>g.id===S.gid)) S.gid = S.groups[0]?.id || null;
+    S.gid ? (watchGroup(), renderApp()) : renderCreateGroup();
+  }));
+});
+
+/* ---------- DATA LISTENERS ---------- */
+let watching=null, groupUnsubs=[];
+function watchGroup(){
+  if(watching===S.gid) return;
+  groupUnsubs.forEach(f=>f()); groupUnsubs=[]; watching=S.gid;
+  const sub=(name,key,order)=>groupUnsubs.push(onSnapshot(query(gcol(name),orderBy(order,"desc")),snap=>{
+    S[key]=snap.docs.map(d=>({id:d.id,...d.data()})); if(S.gid) fill();
+  }));
+  sub("members","members","createdAt");
+  sub("savings","savings","date");
+  sub("loans","loans","issuedDate");
+  sub("repayments","repayments","date");
+}
+
+/* ---------- SCREENS ---------- */
+function renderCreateGroup(){
+  $("#main").innerHTML = `<div class="box"><h2>Create your savings group</h2>
+    <label for="gn">Group name</label><input id="gn">
+    <label for="gr">Loan interest per loan (%)</label><input id="gr" type="number" value="10" min="0">
+    <button class="pri" id="mk">Create group</button>
+    <button class="lnk" id="out">Sign out</button></div>`;
+  $("#mk").onclick = async()=>{
+    const name=$("#gn").value.trim(); if(!name) return toast("Enter a group name");
+    await addDoc(collection(db,"groups"),{name,ownerId:S.user.uid,interestRate:+$("#gr").value||0,createdAt:serverTimestamp()});
+  };
+  $("#out").onclick=()=>signOut(auth);
+}
+
+function renderApp(){
+  const tabs=[["members","Members"],["savings","Savings"],["loans","Loans"],["summary","Summary"]];
+  $("#main").innerHTML = `<div class="sub" style="margin-bottom:8px">${esc(curGroup().name)} <button class="lnk" id="out" style="color:inherit;text-decoration:underline">Sign out</button></div>
+    <nav>${tabs.map(([k,l])=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${l}</button>`).join("")}</nav><div id="body"></div>`;
+  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;renderApp()});
+  $("#out").onclick=()=>signOut(auth);
+  const forms={
+    members:`<div class="box"><h2>Add member</h2><label for="mn">Name</label><input id="mn"><label for="mp">Phone (optional)</label><input id="mp" inputmode="tel"><button class="pri" id="go">Add member</button></div><div class="box" id="list"></div>`,
+    savings:`<div class="box"><h2>Record savings</h2><label for="sm">Member</label><select id="sm"></select><label for="sa">Amount</label><input id="sa" type="number" inputmode="numeric"><label for="sd">Date</label><input id="sd" type="date" value="${today()}"><button class="pri" id="go">Save contribution</button></div><div class="box" id="list"></div>`,
+    loans:`<div class="box"><h2>Give a loan</h2><label for="lm">Member</label><select id="lm"></select><label for="la">Amount</label><input id="la" type="number" inputmode="numeric"><label for="lr">Interest (%)</label><input id="lr" type="number" value="${curGroup().interestRate||0}"><label for="ld">Date</label><input id="ld" type="date" value="${today()}"><button class="pri" id="go">Give loan</button></div><div class="box" id="list"></div>`,
+    summary:`<div id="list"></div>`
+  };
+  $("#body").innerHTML = forms[S.tab];
+  const go=$("#go"); if(go) go.onclick=submit;
+  fill();
+}
+
+async function submit(){
+  const t=S.tab;
+  try{
+    if(t==="members"){
+      const name=$("#mn").value.trim(); if(!name) return toast("Enter a name");
+      await addDoc(gcol("members"),{name,phone:$("#mp").value.trim(),createdAt:serverTimestamp()});
+      $("#mn").value=$("#mp").value=""; toast("Member added");
+    }
+    if(t==="savings"){
+      const amount=+$("#sa").value, memberId=$("#sm").value;
+      if(!memberId||!(amount>0)) return toast("Choose a member and enter an amount");
+      await addDoc(gcol("savings"),{memberId,amount,date:$("#sd").value,createdAt:serverTimestamp()});
+      $("#sa").value=""; toast("Contribution saved");
+    }
+    if(t==="loans"){
+      const principal=+$("#la").value, memberId=$("#lm").value;
+      if(!memberId||!(principal>0)) return toast("Choose a member and enter an amount");
+      const rate=+$("#lr").value||0;
+      await addDoc(gcol("loans"),{memberId,principal,interestRate:rate,totalDue:principal*(1+rate/100),issuedDate:$("#ld").value,createdAt:serverTimestamp()});
+      $("#la").value=""; toast("Loan recorded");
+    }
+  }catch(e){toast("Could not save: "+e.code)}
+}
+
+/* Only the lists change when data arrives, so typing is never interrupted. */
+function fill(){
+  const list=$("#list"); if(!list) return;
+  const opts=S.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  for(const id of ["sm","lm"]){const el=$("#"+id); if(el&&el.innerHTML!==opts){const v=el.value;el.innerHTML=opts;el.value=v||el.value}}
+  const empty=t=>`<p class="sub">${t}</p>`;
+  const del=(col,id)=>`<button class="lnk" data-del="${col}:${id}" aria-label="Delete">Delete</button>`;
+  if(S.tab==="members") list.innerHTML = `<h2>Members (${S.members.length})</h2>` + (S.members.map(m=>`<div class="row"><div>${esc(m.name)}<div class="sub">${esc(m.phone||"")}</div></div>${del("members",m.id)}</div>`).join("")||empty("No members yet. Add your first member above."));
+  if(S.tab==="savings") list.innerHTML = `<h2>Recent savings</h2>` + (S.savings.slice(0,50).map(s=>`<div class="row"><div>${esc(mName(s.memberId))}<div class="sub">${esc(s.date)}</div></div><div class="num">${money(s.amount)}</div>${del("savings",s.id)}</div>`).join("")||empty("No savings recorded yet."));
+  if(S.tab==="loans") list.innerHTML = `<h2>Loans</h2>` + (S.loans.map(l=>{
+    const paid=S.repayments.filter(r=>r.loanId===l.id).reduce((a,r)=>a+r.amount,0), bal=l.totalDue-paid;
+    return `<div class="row"><div>${esc(mName(l.memberId))}<div class="sub">${esc(l.issuedDate)} · borrowed ${money(l.principal)} · due ${money(l.totalDue)}</div></div><div><div class="num" style="color:${bal<=0?"var(--leaf)":"var(--red)"}">${bal<=0?"Paid":money(bal)+" left"}</div>${bal>0?`<button class="lnk" style="color:var(--leaf)" data-pay="${l.id}">Add repayment</button>`:""}${del("loans",l.id)}</div></div>`}).join("")||empty("No loans yet."));
+  if(S.tab==="summary") list.innerHTML = summary();
+  list.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
+    const [c,id]=b.dataset.del.split(":"); if(confirm("Delete this record?")) await deleteDoc(doc(db,"groups",S.gid,c,id));
+  });
+  list.querySelectorAll("[data-pay]").forEach(b=>b.onclick=async()=>{
+    const a=+prompt("Repayment amount"); if(a>0){await addDoc(gcol("repayments"),{loanId:b.dataset.pay,memberId:S.loans.find(l=>l.id===b.dataset.pay).memberId,amount:a,date:today(),createdAt:serverTimestamp()});toast("Repayment saved")}
+  });
+}
+
+function summary(){
+  const totalSav=S.savings.reduce((a,s)=>a+s.amount,0);
+  let out=0, interest=0;
+  for(const l of S.loans){
+    const paid=S.repayments.filter(r=>r.loanId===l.id).reduce((a,r)=>a+r.amount,0);
+    out+=Math.max(0,l.totalDue-paid); interest+=Math.max(0,paid-l.principal);
+  }
+  const pool=totalSav+interest;
+  const rows=S.members.map(m=>{
+    const sv=S.savings.filter(s=>s.memberId===m.id).reduce((a,s)=>a+s.amount,0);
+    return {name:m.name,sv,pay:totalSav?sv/totalSav*pool:0};
+  });
+  return `<div class="box stat"><div><div class="sub">Total savings</div><div class="big">${money(totalSav)}</div></div><div><div class="sub">Loans outstanding</div><div class="big">${money(out)}</div></div><div><div class="sub">Interest earned</div><div class="big">${money(interest)}</div></div></div>
+  <div class="box"><h2>Share-out if the cycle ended today</h2><p class="sub">Each member gets back their savings plus a share of the interest earned, in proportion to what they saved.</p>`+
+  (rows.map(r=>`<div class="row"><div>${esc(r.name)}<div class="sub">saved ${money(r.sv)}</div></div><div class="num">${money(r.pay)}</div></div>`).join("")||`<p class="sub">Add members and savings to see the share-out.</p>`)+`</div>`;
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
