@@ -79,6 +79,7 @@ main>*{animation:up .22s ease both}#md>div{animation:sl .22s ease}
 header{display:flex;align-items:center;gap:10px}#hlogo{width:38px;height:38px;border-radius:9px;object-fit:cover;flex:none;background:#fff}header.hl h1:before{display:none}
 :root{--hl:#fff3a8}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--hl:#4a4210}}:root[data-theme="dark"]{--hl:#4a4210}
 .mr.pre{background:var(--hl);border-color:#e6c200}.bd.pre,.bd.adv{background:#ffe066;color:#3a2f00;border-color:#e0b800}
+.ws th,.ws td{padding:4px 5px}.ws input,.ws select{width:86px;margin:0;padding:8px 6px;text-align:right}.ws select{width:58px;text-align:left}.ws input[disabled]{opacity:.4}.stk{position:sticky;left:0;background:var(--card);z-index:1;min-width:132px;max-width:160px;white-space:normal!important;text-align:left!important;box-shadow:1px 0 0 var(--line)}.fb{min-width:50px;padding:8px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);font-weight:700;cursor:pointer}
 </style>
 </head><body>
 <header><img id="hlogo" alt="" hidden><div><h1 id="hn">VSLA Group Book</h1><small id="ha"></small></div><button id="installApp" aria-label="Install app" style="position:absolute;right:54px;top:12px;height:34px;padding:0 9px;border:1px solid #f28c00;border-radius:8px;background:transparent;color:inherit;font-size:12px;font-weight:700;display:none">Install</button><button id="hb" aria-label="How to use this app" data-act="go" data-arg="help">?</button></header>
@@ -106,7 +107,7 @@ const firebaseConfig = {
 const app=initializeApp(firebaseConfig), auth=getAuth(app);
 const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 
-const S={user:null,groups:[],gid:null,members:[],meetings:[],entries:[],expenses:[],tab:"home",msub:"sheet",sub:"loans",rsub:"meet",mq:"",mon:new Date().toISOString().slice(0,7),date:null,cal:new Date(),modal:false,brush:{g:"Attendance",k:"attendance",v:"Present",l:"Attendance: Present"},q:"",hide:false,pick:false};
+const S={user:null,groups:[],gid:null,members:[],meetings:[],entries:[],expenses:[],tab:"home",msub:"week",sub:"loans",rsub:"week",mq:"",mon:new Date().toISOString().slice(0,7),date:null,cal:new Date(),modal:false,brush:{g:"Attendance",k:"attendance",v:"Present",l:"Attendance: Present"},q:"",hide:false,pick:false};
 let unsubs=[],gUn=[],watching=null;const R={members:[],meetings:[],entries:[],expenses:[]};
 const $=s=>document.querySelector(s),N=v=>+v||0,money=n=>Math.round(n||0).toLocaleString();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -116,12 +117,12 @@ const P=s=>{const[a,b,c]=s.split("-");return new Date(+a,b-1,+c)};
 const AD=(s,n)=>{const d=P(s);d.setDate(d.getDate()+n);return iso(d)};
 const fmt=s=>P(s).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
 const G=()=>S.groups.find(g=>g.id===S.gid);
-const cfg=()=>({loanMonthlyRate:10,loanMonths:3,loanPenalty:5000,loanFull:0,registrationFee:0,retentionFee:0,starValue:2000,savMin:2000,savMax:20000,sfMin:1000,sfMax:10000,shareFines:1,openingSocial:0,cycleStart:"",absentFine:0,lateFine:0,noiseFine:0,loanFormFee:0,openingBalance:0,savChips:"2000,4000,6000,10000,20000",sfChips:"1000,2000,5000,10000",...(G()?.settings||{})});
+const cfg=()=>({loanMonthlyRate:10,loanMonths:3,loanPenalty:5000,loanFull:0,registrationFee:0,registrationFeeNew:0,retentionFee:0,meetFine:0,probationWeeks:3,starValue:2000,savMin:2000,savMax:20000,sfMin:1000,sfMax:10000,shareFines:1,openingSocial:0,cycleStart:"",absentFine:0,lateFine:0,noiseFine:0,loanFormFee:0,openingBalance:0,savChips:"2000,4000,6000,10000,20000",sfChips:"1000,2000,5000,10000",...(G()?.settings||{})});
 const gcol=n=>collection(db,"groups",S.gid,n),gdoc=(n,id)=>doc(db,"groups",S.gid,n,id);
 const mem=()=>[...S.members].sort((a,b)=>a.memberNo-b.memberNo);
 const dates=()=>[...new Set([...S.meetings.map(m=>m.id),...S.entries.map(e=>e.date)])].sort();
 const wk=d=>dates().indexOf(d)+1;
-const fines=e=>N(e.absentFine)+N(e.lateFine)+N(e.noiseFine)+N(e.otherFines);
+const fines=e=>N(e.absentFine)+N(e.lateFine)+N(e.noiseFine)+N(e.meetFine)+N(e.otherFines);
 // Total Paid = cash the member hands in this week. Loan Taken is cash going out, so it is not included.
 const cashSav=e=>N(e.savings)-N(e.prepaid)+N(e.advance); // cash actually received for savings (prepaid weeks bring no cash)
 const evenOK=a=>Number.isInteger(a)&&a%2===0;
@@ -142,11 +143,11 @@ const emailOf=p=>p.replace(/\D/g,"")+"@savingsbook.app";
 function stop(){unsubs.forEach(f=>f());unsubs=[];gUn.forEach(f=>f());gUn=[];watching=null}
 function login(){
   stop();$("#nv").innerHTML="";$("#cb").hidden=true;$("#hn").textContent="VSLA Group Book";$("#ha").textContent="";
-  $("#main").innerHTML=`<div class="box"><h2>Sign in</h2><label for="ph">Phone number</label><input id="ph" inputmode="tel" placeholder="0772123456"><label for="pin">6-digit PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="6"><button class="pri" id="in">Sign in</button><button class="pri" id="up" style="background:var(--leaf);color:#fff">Create account</button></div>`;
+  $("#main").innerHTML=`<div class="box"><h2>Sign in</h2><label for="ph">Phone number</label><input id="ph" inputmode="tel" placeholder="0772123456"><label for="pin">6-digit PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="6"><div id="cf" class="hide"><label for="pin2">Repeat PIN</label><input id="pin2" type="password" inputmode="numeric" maxlength="6"></div><button class="pri" id="in">Sign in</button><button class="pri" id="up" style="background:var(--leaf);color:#fff">Create account</button></div>`;
   const run=async fn=>{const ph=$("#ph").value,pin=$("#pin").value;
     if(ph.replace(/\D/g,"").length<9||!/^\d{6}$/.test(pin))return toast("Enter a valid phone number and a 6-digit PIN");
     try{await fn(auth,emailOf(ph),pin)}catch(e){toast(e.code==="auth/invalid-credential"?"Wrong phone number or PIN":e.code==="auth/email-already-in-use"?"Account exists. Sign in instead":"Could not sign in: "+e.code)}};
-  $("#in").onclick=()=>run(signInWithEmailAndPassword);$("#up").onclick=()=>run(createUserWithEmailAndPassword);
+  $("#in").onclick=()=>run(signInWithEmailAndPassword);$("#up").onclick=()=>{if($("#cf").classList.contains("hide")){$("#cf").classList.remove("hide");return toast("Repeat your PIN, then tap Create account again")}if($("#pin").value!==$("#pin2").value)return toast("PINs do not match");run(createUserWithEmailAndPassword)};
 }
 onAuthStateChanged(auth,u=>{
   S.user=u;stop();if(!u)return login();
@@ -176,7 +177,7 @@ function fixIds(){const miss=S.members.filter(m=>!m.memberNo);if(!miss.length)re
 
 /* ---------- TEMPLATE HELPERS (same look as the hardware app) ---------- */
 const V={};
-const TABS=[["home","Home"],["meeting","Meeting"],["members","Members"],["money","Money"],["rep","Reports"],["set","Setup"]];
+const TABS=[["home","Home"],["meeting","Saving week"],["members","Members"],["money","Money"],["rep","Reports"],["set","Setup"]];
 const card=(l,v,o={})=>`<div class="stat${o.w?" wide":""}"${o.g?` role="button" tabindex="0" data-act="go" data-arg="${o.g}"`:""}><small>${l}</small><span class="num ${o.c||""}">${v}</span></div>`;
 const item=(t,s,r,a,cls="")=>{const tg=a?"button":"div";return `<${tg} class="item"${a?` data-act="${a[0]}" data-arg="${esc(a[1])}"`:' style="cursor:default"'}><span class="nm"><b>${t}</b><small>${s||""}</small></span><span class="pr ${cls}">${r??""}</span></${tg}>`};
 const seg=(arr,cur,act)=>`<div class="seg">${arr.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="${act}" data-arg="${k}">${l}</button>`).join("")}</div>`;
@@ -218,14 +219,14 @@ function refresh(force){
 }
 async function openMeeting(d){
   if(!dates().includes(d)){const pre=mem().filter(m=>m.status!=="Inactive").map(m=>[m,pending(m.id)]).filter(([,p])=>p.n>0);setDoc(gdoc("meetings",d),{date:d});const t0=Date.now();while(!dates().includes(d)&&Date.now()-t0<2000)await new Promise(r=>setTimeout(r,40));if(pre.length)await bulk(pre.map(([m,p])=>[gdoc("entries",d+"_"+m.id),{date:d,memberId:m.id,attendance:"",savings:p.amt,prepaid:p.amt,totalFines:0,totalPaid:0}]))}
-  S.date=d;S.tab="meeting";S.msub="sheet";shell();
+  S.date=d;S.tab="meeting";S.msub="week";shell();
 }
 function pending(mid){const es=S.entries.filter(e=>e.memberId===mid),cr=sumA(es,e=>N(e.advance)-N(e.prepaid)),a=es.filter(e=>N(e.advance)>0).sort((x,y)=>x.date<y.date?1:-1)[0],w=N(a?.advanceWeekly);return{credit:cr,weekly:w,n:cr>0&&w?Math.ceil(cr/w):0,amt:Math.min(w,cr)}}
-const MS=[["sheet","Roll call"],["cal","Calendar"],["cash","Cash"]];
+const MS=[["week","Week sheet"],["sheet","Roll call"],["cal","Calendar"],["cash","Cash"]];
 const msg=()=>seg(MS,S.msub,"msub");
 const picker=(ds,d)=>`<label for="mpk">Meeting</label><select id="mpk">${[...ds].reverse().map(x=>`<option value="${x}" ${x===d?"selected":""}>Wk ${wk(x)} · ${fmt(x)}</option>`).join("")}</select>`;
 const noMeet=`<div class="box"><h2>No meetings yet</h2><p class="sub">Open the Calendar tab and tap a Sunday or Saturday to start the first meeting.</p></div>`;
-V.meeting=()=>S.msub==="cal"?vCal():S.msub==="cash"?vCash():vSheet();
+V.meeting=()=>S.msub==="cal"?vCal():S.msub==="cash"?vCash():S.msub==="sheet"?vSheet():vWeek();
 function brushes(){
   const c=cfg(),ch=s=>String(s||"").split(",").map(x=>+x.trim()).filter(x=>x>0);
   const mk=(g,k,arr)=>({g,items:arr.map(([t,v])=>({g,k,v,t,l:v==="?"?g+": other amount":g+": "+t}))});
@@ -258,7 +259,7 @@ const vSheet=()=>{
   const done=act.filter(m=>has(EM[m.id])).length;
   const tot=b.k==="attendance"?`${c("Present")} present · ${c("Late")} late · ${c("Absent")} absent`:"total "+money(sumE(es,b.k));
   body(msg()+`<div class="box"><label for="mpk">Meeting</label><select id="mpk">${[...ds].reverse().map(x=>`<option value="${x}" ${x===d?"selected":""}>Wk ${wk(x)} · ${fmt(x)}</option>`).join("")}</select>
-  <div class="r2"><button class="sec" id="mv">${sat?"Move to Sunday":"Move to Saturday"}</button><button class="sec" id="cd">Change date</button></div><button class="sec" id="allp">Mark everyone without a record as Present</button></div>
+  <div class="r2"><button class="sec" id="cd">Change date</button></div><button class="sec" id="allp">Mark everyone without a record as Present</button></div>
   <div class="brush"><div class="stat wide" style="margin-bottom:6px"><div class="r2" style="align-items:center"><div><b>${esc(b.l)}</b><div class="sub">${done} of ${act.length} done · ${tot}</div></div><button class="sec" id="chg" style="margin:0;flex:none;width:auto" aria-expanded="${S.pick}">${S.pick?"Close":"Change"}</button></div></div>
   ${S.pick?`<div style="margin-top:8px">${B.map((g,gi)=>`<div class="sub">${g.g}</div><div class="chips">${g.items.map((it,ii)=>`<button class="chip" data-b="${gi}:${ii}" aria-pressed="${b.k===it.k&&b.v===it.v}">${esc(it.t)}</button>`).join("")}</div>`).join("")}<p class="sub">Late and absent fines are added automatically from the amounts in Tools &gt; Group settings.</p></div>`:""}
   <div class="r2" style="margin-top:8px"><input id="q" placeholder="Search name or ID" aria-label="Search member" value="${esc(S.q)}"><button class="sec" id="hid" aria-pressed="${S.hide}" style="margin:0">${S.hide?"Show all":"Hide done"}</button></div></div>
@@ -274,7 +275,6 @@ const vSheet=()=>{
   $("#chg").onclick=()=>{S.pick=!S.pick;V.meeting()};$("#hid").onclick=()=>{S.hide=!S.hide;V.meeting()};
   document.querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>{const[g,i]=x.dataset.b.split(":");S.brush=B[g].items[i];S.pick=false;V.meeting()});
   $("#mpk").onchange=e=>{S.date=e.target.value;V.meeting()};
-  $("#mv").onclick=()=>moveMeeting(d,AD(d,sat?1:-1));
   $("#cd").onclick=()=>{const n=prompt("New date (YYYY-MM-DD)",d);if(n&&/^\d{4}-\d\d-\d\d$/.test(n))moveMeeting(d,n);else if(n)toast("Use the format YYYY-MM-DD")};
   $("#allp").onclick=async()=>{const items=act.filter(m=>!EM[m.id]).map(m=>[gdoc("entries",d+"_"+m.id),{date:d,memberId:m.id,attendance:"Present",totalFines:0,totalPaid:0}]);
     if(items.length&&confirm("Mark "+items.length+" members as Present?")){await bulk(items);toast("Done")}};
@@ -313,7 +313,7 @@ function vCash(){
   $("#mpk").onchange=e=>{S.date=e.target.value;vCash()};bindCash(d);
 }
 const KEYS=["registration","retention","savings","socialFund","loanTaken","loanRepayment","loanFormFee","absentFine","lateFine","noiseFine","otherFines"];
-const KM=KEYS.filter(k=>k!=="savings");
+const KM=KEYS.filter(k=>k!=="savings").concat("meetFine");
 function openEntry(mid){
   const m=S.members.find(x=>x.id===mid),d=S.date,old=S.entries.find(e=>e.id===d+"_"+mid),c=cfg(),first=d===dates()[0];
   const e=old||{retention:first?c.retentionFee||"":"",loanMonthlyRate:c.loanMonthlyRate},pre=N(e.prepaid)>0;
@@ -323,7 +323,7 @@ function openEntry(mid){
   <label for="f_att">Attendance</label><select id="f_att">${["","Present","Late","Absent"].map(x=>`<option value="${x}" ${e.attendance===x?"selected":""}>${x||"Not recorded"}</option>`).join("")}</select>
   ${f("registration","Registration")}${first||N(e.retention)?f("retention","Retention (once, first meeting of the cycle)"):""}
   ${pre?`<div class="box" style="background:var(--hl)"><b>Prepaid week</b><br>${money(e.savings)} was paid in advance. No cash today.</div>`:inp("f_total","Savings handed in today (total)","number",(N(e.savings)-N(e.prepaid)+N(e.advance))||"")+inp("f_weeks","Weeks covered (1 = this week only, 5 = this week + 4 ahead)","number",1+N(e.advanceWeeks))}<div class="sub" id="wk"></div>
-  ${f("socialFund","Social fund (1,000 to 10,000)")}${f("loanTaken","Loan taken")}${inp("f_loanMonthlyRate","Interest per month (%)","number",e.loanMonthlyRate??c.loanMonthlyRate)}${f("loanRepayment","Loan repayment (principal + interest + penalty)")}${f("loanFormFee","Loan form fee")}${f("absentFine","Absent fine")}${f("lateFine","Late fine")}${f("noiseFine","Noise fine")}${f("otherFines","Other fines")}
+  ${f("socialFund","Social fund (1,000 to 10,000)")}${f("loanTaken","Loan taken")}${inp("f_loanMonthlyRate","Interest per month (%)","number",e.loanMonthlyRate??c.loanMonthlyRate)}${f("loanRepayment","Loan repayment (principal + interest + penalty)")}${f("loanFormFee","Loan form fee")}${f("absentFine","Absent fine")}${f("lateFine","Late fine")}${f("noiseFine","Noise fine")}${f("meetFine","Missed meeting fine")}${f("otherFines","Other fines")}
   <div class="box" id="tot" style="margin-top:12px"></div><button class="pri" id="sv">Save</button><button class="sec" id="cl">Cancel</button>${old?`<button class="lnk" id="rm">Clear this record</button>`:""}`);
   const get=()=>{const o={attendance:$("#f_att").value,loanMonthlyRate:N($("#f_loanMonthlyRate").value)};KM.forEach(k=>o[k]=N($("#f_"+k)?.value));
     if(pre){o.savings=N(e.savings);o.prepaid=N(e.prepaid);o.advance=0}else{const t=N($("#f_total").value),w=Math.max(1,Math.round(N($("#f_weeks").value))||1),wl=t/w;o.savings=wl;o.prepaid=0;o.advance=w>1?t-wl:0;o.advanceWeeks=w-1;o.advanceWeekly=w>1?wl:0}return o};
@@ -339,6 +339,45 @@ function openEntry(mid){
   if(old)$("#rm").onclick=async()=>{if(confirm("Clear this record?")){await deleteDoc(gdoc("entries",d+"_"+mid));close()}};
 }
 
+/* ---------- SAVING WEEK SHEET ---------- */
+const probation=(m,d)=>{if(m.memberType!=="New")return false;const w=dates().filter(x=>x>=(m.joinDate||"")),i=w.indexOf(d);return i>=0&&i<(N(cfg().probationWeeks)||3)};
+const regFor=m=>N(m.memberType==="New"?cfg().registrationFeeNew:cfg().registrationFee);
+// Changes one member's record for the open week and keeps everything else on it as it was.
+function saveEntry(mid,fn){const id=S.date+"_"+mid,{id:_x,...e}=S.entries.find(x=>x.id===id)||{date:S.date,memberId:mid};if(fn(e)===false)return;e.totalFines=fines(e);e.totalPaid=paid(e);setDoc(gdoc("entries",id),e).catch(x=>toast("Could not save: "+x.code))}
+function thisWeek(){const t=new Date(),a=new Date(t);a.setDate(t.getDate()-(t.getDay()+6)%7);const s=iso(a),e=AD(s,6);return{s,e,w:dates().filter(x=>x>=s&&x<=e)}}
+const wtab=es=>`<div class="tw"><table><tr><th>ID</th><th>Name</th><th>Attend.</th><th>Savings</th><th>Social</th><th>Loan refund</th><th>Fines</th><th>Paid</th></tr>${[...es].sort((a,b)=>mOf(a.memberId).memberNo-mOf(b.memberId).memberNo).map(e=>`<tr><td>${mOf(e.memberId).memberNo}</td><td>${esc(mOf(e.memberId).name)}</td><td>${esc(e.attendance||"-")}</td><td>${money(e.savings)}</td><td>${money(e.socialFund)}</td><td>${money(e.loanRepayment)}</td><td>${money(fines(e))}</td><td><b>${money(paid(e))}</b></td></tr>`).join("")}</table></div>`;
+function fineForm(mid){
+  const m=mOf(mid),e=S.entries.find(x=>x.id===S.date+"_"+mid)||{},c=cfg();
+  const T=[["absentFine","Missed saving day"],["meetFine","Missed group meeting"],["lateFine","Late coming"],["noiseFine","Noise making"]];
+  modal(`<h2>#${m.memberNo} ${esc(m.name)}</h2><div class="sub">Fines · ${fmt(S.date)}</div><div style="margin-top:8px">${T.map(([k,l])=>`<label class="chk"><input type="checkbox" id="fz_${k}" ${N(e[k])?"checked":""}> ${l} (${N(c[k])?money(c[k]):"set the amount in Setup"})</label>`).join("")}</div>${inp("fz_o","Other fine (amount)","number",e.otherFines||"")}<button class="pri" id="fzs">Save</button><button class="sec" id="fzc">Cancel</button>`);
+  $("#fzc").onclick=()=>{modal();refresh(true)};
+  $("#fzs").onclick=()=>{saveEntry(mid,x=>{T.forEach(([k])=>x[k]=$("#fz_"+k).checked?N(c[k]):0);x.otherFines=N($("#fz_o").value)});modal();setTimeout(()=>refresh(true),200)};
+}
+const vWeek=()=>{
+  const ds=dates();if(!ds.length)return body(msg()+noMeet);
+  if(!ds.includes(S.date))S.date=ds[ds.length-1];
+  const d=S.date,c=cfg(),first=d===ds[0],act=mem().filter(m=>m.status!=="Inactive"),EM=Object.fromEntries(S.entries.filter(e=>e.date===d).map(e=>[e.memberId,e])),L=loans(d).filter(l=>l.date<=d),att={Present:"P",Late:"L",Absent:"A"};
+  const ip=(m,f,v,x="")=>`<input type="number" inputmode="numeric" min="0" data-m="${m}" data-f="${f}" value="${N(v)||""}" ${x}>`;
+  const rows=act.map(m=>{const e=EM[m.id]||{},pb=probation(m,d),pre=N(e.prepaid)>0,adv=N(e.advance)>0,ow=L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0);
+    return `<tr data-r="${m.id}" data-s="${esc((m.memberNo+" "+m.name).toLowerCase())}"><td class="stk"><b>${m.memberNo}</b> ${esc(m.name)}${m.memberType==="New"?` <span class="bd">New</span>`:""}${ow?`<br><small class="low">owes ${money(ow)}</small>`:""}</td><td><select data-m="${m.id}" data-f="attendance" aria-label="Attendance">${["","Present","Late","Absent"].map(x=>`<option value="${x}" ${e.attendance===x?"selected":""}>${att[x]||"–"}</option>`).join("")}</select></td>${first?`<td>${ip(m.id,"registration",e.registration,`placeholder="${regFor(m)||""}"`)}</td><td>${ip(m.id,"retention",e.retention)}</td>`:""}<td>${pb?`<small>Probation</small>`:pre?`<small>Prepaid ${money(e.savings)}</small>`:adv?`<small>+${e.advanceWeeks} wks ahead</small>`:ip(m.id,"savings",e.savings)}</td><td>${ip(m.id,"socialFund",e.socialFund)}</td><td>${ip(m.id,"loanRepayment",e.loanRepayment)}</td><td><button class="fb" data-fm="${m.id}" data-fb="${m.id}">${fines(e)?money(fines(e)):"+"}</button></td><td class="num" data-p="${m.id}">${EM[m.id]?money(paid(e)):""}</td><td><button class="dots" style="width:36px" data-m2="${m.id}" aria-label="More details">⋯</button></td></tr>`}).join("");
+  body(msg()+`<div class="box">${picker(ds,d)}<div class="r2"><button class="sec" id="cd">Change date</button><button class="sec" id="allp">All present</button></div>${first?`<button class="sec" id="fillreg">Fill registration fees (old ${money(c.registrationFee)} / new ${money(c.registrationFeeNew)})</button>`:""}<input id="wq" placeholder="Search name or ID" style="margin:8px 0 0" aria-label="Search member"></div><div class="brush"><div class="stat wide" id="wst"></div></div><div class="tw ws"><table><tr><th class="stk">Member</th><th>Att</th>${first?"<th>Registration</th><th>Retention</th>":""}<th>Savings</th><th>Social fund</th><th>Loan refund</th><th>Fines</th><th>Paid</th><th></th></tr>${rows}</table></div><p class="sub">Type amounts and press Enter to go to the next member. Entries save automatically and other details on a member's record stay as they are. New members do not pay savings during their ${N(c.probationWeeks)||3}-week probation.</p>`);
+  const ft=()=>{const r=cash(d),es=S.entries.filter(e=>e.date===d);$("#wst").innerHTML=`<small>Money in this week</small><span class="num">UGX ${money(r.in)}</span><div class="sub">Savings ${money(r.sav+r.adv)} · Social ${money(r.sf)} · Loan refund ${money(r.rep)} · Fines ${money(r.fin)}</div>`;
+    document.querySelectorAll("[data-p]").forEach(x=>{const e=es.find(y=>y.memberId===x.dataset.p);x.textContent=e?money(paid(e)):""});
+    document.querySelectorAll("[data-fb]").forEach(x=>{const e=es.find(y=>y.memberId===x.dataset.fb);x.textContent=e&&fines(e)?money(fines(e)):"+"})};
+  ft();const W=$(".ws");
+  W.onchange=ev=>{const t=ev.target,mid=t.dataset.m,f=t.dataset.f;if(!mid||!f)return;let v=t.value;
+    if(f==="attendance")saveEntry(mid,e=>{e.attendance=v;e.absentFine=v==="Absent"?N(c.absentFine):0;e.lateFine=v==="Late"?N(c.lateFine):0});
+    else{v=N(v);if(f==="savings"&&v>0&&!chkSav(v)){t.value=t.defaultValue;return}if(f==="socialFund"&&v>0&&!chkSf(v)){t.value=t.defaultValue;return}
+      saveEntry(mid,e=>{e[f]=v;if(f==="savings"){e.advance=0;e.advanceWeeks=0;e.advanceWeekly=0}})}
+    setTimeout(ft,150)};
+  W.onkeydown=ev=>{if(ev.key!=="Enter"||ev.target.tagName!=="INPUT")return;ev.preventDefault();const all=[...W.querySelectorAll(`input[data-f="${ev.target.dataset.f}"]:not([disabled])`)],n=all[all.indexOf(ev.target)+1];if(n){n.focus();n.select()}else ev.target.blur()};
+  W.onclick=ev=>{const b=ev.target.closest("[data-fm],[data-m2]");if(b){if(b.dataset.fm)fineForm(b.dataset.fm);else openEntry(b.dataset.m2)}};
+  $("#wq").oninput=ev=>{const q=ev.target.value.toLowerCase();W.querySelectorAll("tr[data-r]").forEach(r=>r.classList.toggle("hide",!!q&&!r.dataset.s.includes(q)))};
+  $("#mpk").onchange=ev=>{S.date=ev.target.value;vWeek()};
+  $("#cd").onclick=()=>{const n=prompt("New date (YYYY-MM-DD)",d);if(n&&/^\d{4}-\d\d-\d\d$/.test(n))moveMeeting(d,n);else if(n)toast("Use the format YYYY-MM-DD")};
+  $("#allp").onclick=()=>{const m=act.filter(x=>!(EM[x.id]||{}).attendance);if(m.length&&confirm("Mark "+m.length+" members as Present?")){m.forEach(x=>saveEntry(x.id,e=>{e.attendance="Present"}));setTimeout(()=>refresh(true),500)}};
+  if(first)$("#fillreg").onclick=()=>{const m=act.filter(x=>!N((EM[x.id]||{}).registration)&&regFor(x)>0);if(!m.length)return toast("Set the registration fees in Setup first");if(confirm("Fill registration fees for "+m.length+" members?")){m.forEach(x=>saveEntry(x.id,e=>{e.registration=regFor(x)}));setTimeout(()=>refresh(true),500)}};
+};
 /* ---------- CALENDAR ---------- */
 const vCal=()=>{
   const y=S.cal.getFullYear(),mo=S.cal.getMonth(),n=new Date(y,mo+1,0).getDate(),ds=dates(),td=iso(new Date()),t=new Date();
@@ -400,7 +439,7 @@ V.home=()=>{
   const ds=dates(),bk=book(),L=loans(),lb=bk[bk.length-1],box=lb?lb.close:N(cfg().openingBalance),T=k=>sumE(S.entries,k);
   const exp=S.expenses.reduce((a,x)=>a+N(x.amount),0),out=L.reduce((a,l)=>a+l.out,0),ip=L.reduce((a,l)=>a+Math.max(0,l.repaid-l.amount),0);
   const t=iso(new Date()),dw=new Date().getDay(),nx=new Date();nx.setDate(nx.getDate()+(7-dw)%7);
-  let tg,lab;if(ds.includes(t)){tg=t;lab="Open today's meeting"}else if(dw===0||dw===6){tg=t;lab="Start today's meeting"}else{tg=iso(nx);lab="Start meeting: "+fmt(tg)}
+  let tg,lab;if(ds.includes(t)){tg=t;lab="Open today's saving week"}else if(dw===0||dw===6){tg=t;lab="Start today's saving week"}else{tg=iso(nx);lab="Start meeting: "+fmt(tg)}
   const l8=ds.slice(-8),v=l8.map(d=>cash(d).sav),mx=Math.max(...v,1),over=L.filter(l=>l.status==="Overdue"),ab=ds.length?S.entries.filter(e=>e.date===ds[ds.length-1]&&e.attendance==="Absent"):[];
   body(`<div class="cards">${card("Money in the box","UGX "+money(box),{w:1,g:"money:cb"})}${card("Total savings",money(sumA(S.entries,cashSav)),{g:"rep:share"})}${card("Social fund",money(T("socialFund")),{g:"money:sf"})}${card("Loans outstanding",money(out),{g:"money:loans"})}${card("Interest earned",money(ip),{g:"money:loans"})}${card("Fines",money(S.entries.reduce((a,e)=>a+fines(e),0)),{g:"money:fines"})}${card("Expenses",money(exp),{g:"money:exp"})}${card("Members",mem().filter(m=>m.status!=="Inactive").length,{g:"members"})}${card("Last meeting savings",money(lb?lb.sav+lb.adv:0),{g:"meeting:cash"})}</div>
   <button class="btn big" data-act="open" data-arg="${tg}">${lab}</button>${tg!==t&&!ds.includes(t)?`<button class="btn" data-act="open" data-arg="${t}">Start a meeting today (${fmt(t)})</button>`:""}
@@ -418,7 +457,7 @@ V.members=()=>{
 };
 function memberForm(id){
   const m=id?S.members.find(x=>x.id===id):null,next=mem().reduce((a,x)=>Math.max(a,x.memberNo),0)+1;
-  form(m?"Edit member #"+m.memberNo:"Add member (ID "+next+")",[["name","Full name","text"],["gender","Gender","select",["M","F"]],["village","Village","text"],["contact","Contact","tel"],["joinDate","Join date","date"]],m||{joinDate:iso(new Date()),gender:"M"},r=>{
+  form(m?"Edit member #"+m.memberNo:"Add member (ID "+next+")",[["name","Full name","text"],["memberType","Member type","select",["Old","New"]],["gender","Gender","select",["M","F"]],["village","Village","text"],["contact","Contact","tel"],["joinDate","Join date","date"]],m||{joinDate:iso(new Date()),gender:"M",memberType:"Old"},r=>{
     if(!r.name){toast("Enter a name");return false}
     if(m)updateDoc(gdoc("members",m.id),r);else setDoc(gdoc("members","m"+next),{...r,memberNo:next,status:"Active"});toast("Saved")});
 }
@@ -458,7 +497,12 @@ V.money=()=>{
 };
 /* ---------- REPORTS ---------- */
 V.rep=()=>{
-  const s=S.rsub,sg=seg([["meet","Meeting"],["month","Monthly"],["share","Share-out"]],s,"rsub"),ds=dates();
+  const s=S.rsub,sg=seg([["week","This week"],["meet","Saving week"],["month","Monthly"],["share","Share-out"]],s,"rsub"),ds=dates();
+  if(s==="week"){const T=thisWeek();
+    if(!T.w.length)return body(sg+`<div class="box"><h2>No saving week opened yet this week</h2><p class="sub">${fmt(T.s)} to ${fmt(T.e)}</p><button class="btn big" data-act="go" data-arg="meeting:cal">Open the calendar</button></div>`);
+    const C=T.w.map(cash),Tt=k=>sumA(C,r=>r[k]),es=S.entries.filter(e=>T.w.includes(e.date)),c=x=>es.filter(e=>e.attendance===x).length,last=T.w[T.w.length-1],
+      nopay=mem().filter(m=>m.status!=="Inactive"&&!probation(m,last)&&!es.some(e=>e.memberId===m.id&&N(e.savings)>0));
+    return body(sg+`<h3>Week ${wk(T.w[0])} · ${fmt(T.s)} to ${fmt(T.e)}</h3><div class="cards">${card("Money in","UGX "+money(Tt("in")),{w:1})}${card("Savings",money(Tt("sav")+Tt("adv")))}${card("Social fund",money(Tt("sf")))}${card("Loan refund",money(Tt("rep")))}${card("Fines",money(Tt("fin")))}${card("Registration + retention",money(Tt("reg")+Tt("ret")))}${card("Loans given",money(Tt("loan")))}${card("Expenses",money(Tt("exp")))}${card("Left this week",money(Tt("net")),{c:Tt("net")<0?"low":"ok"})}${card("Present",c("Present"))}${card("Late",c("Late"))}${card("Absent",c("Absent"))}</div>${nopay.length?`<h3>No savings yet (${nopay.length})</h3><small>${nopay.map(m=>"#"+m.memberNo+" "+esc(m.name)).join(", ")}</small>`:""}<h3>Members</h3>`+wtab(es))}
   if(s==="share"){const R=memberRows(),F=fund(),soc=(book().slice(-1)[0]||{}).socClose??N(cfg().openingSocial);
     body(sg+`<div class="cards">${card("Share-out pool","UGX "+money(F.pool),{w:1})}${card("Savings",money(F.sv))}${card("Interest and penalties",money(F.prof))}${card("Fines and loan form fees",money(F.shareFF))}${card("Group expenses",money(F.exp))}${card("Total stars",+F.stars.toFixed(1))}${card("Value of one star",money(F.per))}${card("Social fund kept",money(soc))}</div><small>1 star = UGX ${money(F.star)} of savings (fixed for the cycle). Value of one star = pool ÷ total stars. Share-out = stars × value of one star. Loans still owed are deducted. Social fund, registration and retention are not shared out.</small><div class="tw" style="margin-top:8px"><table><tr><th>ID</th><th>Name</th><th>Stars</th><th>Savings</th><th>Loan owed</th><th>Share-out</th><th>Net payout</th></tr>${R.map(r=>`<tr><td>${r.m.memberNo}</td><td>${esc(r.m.name)}</td><td>${+r.stars.toFixed(1)}</td><td>${money(r.sv)}</td><td>${money(r.out)}</td><td>${money(r.pay)}</td><td><b>${money(r.pay-r.out)}</b></td></tr>`).join("")}</table></div><button class="btn" data-act="csv" data-arg="share">Download as spreadsheet (CSV)</button><button class="btn del" id="nc">Close cycle and start a new one</button>`);$("#nc").onclick=newCycle;return}
   if(s==="month"){const m=S.mon,md=ds.filter(d=>d.startsWith(m)),C=md.map(cash),bk=book().filter(r=>r.d.startsWith(m)),T=k=>sumA(C,r=>r[k]);
@@ -476,7 +520,7 @@ function exportCsv(k){
 }
 /* ---------- SETUP + HELP ---------- */
 V.set=()=>{
-  const c=cfg(),SK=[["loanMonthlyRate","Loan interest per month (%)"],["loanMonths","Loan period (months)"],["loanPenalty","Penalty if not repaid in time"],["loanFull","Charge full-period interest even if repaid early (1 = yes, 0 = no)"],["registrationFee","Registration fee"],["retentionFee","Retention (paid once, first meeting of the cycle)"],["absentFine","Absent fine"],["lateFine","Late fine"],["noiseFine","Noise fine"],["loanFormFee","Loan form fee"],["openingBalance","Opening balance in the box"],["openingSocial","Opening social fund (part of the box)"],["starValue","Star value (UGX per star)"],["savMin","Lowest weekly savings"],["savMax","Highest weekly savings"],["sfMin","Lowest social fund"],["sfMax","Highest social fund"],["shareFines","Share fines and loan form fees at share-out (1 = yes, 0 = no)"]];
+  const c=cfg(),SK=[["loanMonthlyRate","Loan interest per month (%)"],["loanMonths","Loan period (months)"],["loanPenalty","Loan default penalty (flat, charged once)"],["loanFull","Charge full-period interest even if repaid early (1 = yes, 0 = no)"],["registrationFee","Registration fee: old members"],["registrationFeeNew","Registration fee: new members"],["retentionFee","Retention default (optional; each member can differ)"],["probationWeeks","Probation weeks for new members (no savings)"],["absentFine","Fine: missed saving day"],["meetFine","Fine: missed group meeting"],["lateFine","Fine: late coming"],["noiseFine","Fine: noise making"],["loanFormFee","Loan form fee"],["openingBalance","Opening balance in the box"],["openingSocial","Opening social fund (part of the box)"],["starValue","Star value (UGX per star)"],["savMin","Lowest weekly savings"],["savMax","Highest weekly savings"],["sfMin","Lowest social fund"],["sfMax","Highest social fund"],["shareFines","Share fines and loan form fees at share-out (1 = yes, 0 = no)"]];
   body(`<button class="btn big" data-act="go" data-arg="help" style="margin:0 0 6px">📖 How to use this app</button><h2>Group details</h2>${inp("gname","Group name","text",G().name)}<h2>Group logo</h2>${G().logo?`<img src="${G().logo}" alt="Group logo" style="width:84px;height:84px;border-radius:12px;object-fit:cover;display:block;margin-bottom:8px">`:""}<input id="lg" type="file" accept="image/*" aria-label="Choose group logo">${G().logo?`<button class="btn del" id="lgx">Remove logo</button>`:""}<h3>Meeting money</h3>${SK.map(([k,l])=>inp("s_"+k,l,"number",c[k])).join("")}${inp("s_cycleStart","Cycle start date (blank = all records)","date",c.cycleStart)}<h3>Quick tap amounts (comma separated)</h3>${inp("s_savChips","Savings amounts","text",c.savChips)}${inp("s_sfChips","Social fund amounts","text",c.sfChips)}<button class="btn big" id="ss">Save settings</button>
   <h3>Import from Excel (CSV)</h3><small>Choose members.csv first, then history.csv. Importing again updates records and does not duplicate them.</small><input id="imp" type="file" accept=".csv" aria-label="CSV file" style="margin-top:6px">
   <h3>Backup</h3><small>Download a copy of all records now and then. Do not put backup files on GitHub.</small><button class="btn" id="bk">Download backup file</button><h3>Account</h3><button class="btn del" id="out">Sign out</button>`);
@@ -486,7 +530,7 @@ V.set=()=>{
   $("#out").onclick=()=>signOut(auth);
 };
 V.help=()=>{
-  const H=[["Run a Sunday (or Saturday) meeting","<ol><li>Home, tap the big button, or use Meeting &gt; Calendar and tap the date.</li><li>On Roll call, tap <b>Change</b> and choose an action: Present, Late, Absent, a savings amount, a social fund amount or a fine.</li><li>Tap each member's name to apply it. Tap again to undo.</li><li>Use <b>⋯</b> on a member for loans, loan form fees and other details.</li></ol>"],["Money in the box","<p>Meeting &gt; Cash shows money in, loans given, expenses and what is left in the box. Add expenses such as printing loan forms, pens and rulers there. Money &gt; Cash book lists every meeting.</p>"],["Loans","<p>Give a loan with ⋯ on the member (Loan taken). Money &gt; Loans shows what is owed. Tap an unpaid loan to record a repayment.</p>"],["Saturday meetings","<p>On Roll call, <b>Move to Saturday</b> shifts the meeting a day earlier with all its records. <b>Change date</b> picks any date.</p>"],["Reports and share-out","<p>Reports has a report for one meeting, a monthly report and the end-of-cycle share-out. Each can be downloaded as a spreadsheet.</p>"],["Paying savings ahead","<p>On a member's ⋯ enter the total handed in and the weeks covered (for example 100,000 for 5 weeks). The extra weeks show in yellow and are applied automatically when those meetings are opened. Savings must be even amounts from 2,000 to 20,000 a week; social fund from 1,000 to 10,000.</p>"],["Loans","<p>Interest is 10% for every month started, up to 3 months (30%). A loan not cleared after 3 months adds the penalty. Amounts are set in Setup.</p>"],["Install on your phone","<p>In Chrome, open the menu and tap Install app or Add to Home screen. The calculator button (🧮) also has a loan calculator and a cash counter.</p>"]];
+  const H=[["Run a Sunday (or Saturday) meeting","<ol><li>Home, tap the big button, or use Meeting &gt; Calendar and tap the date.</li><li>On Roll call, tap <b>Change</b> and choose an action: Present, Late, Absent, a savings amount, a social fund amount or a fine.</li><li>Tap each member's name to apply it. Tap again to undo.</li><li>Use <b>⋯</b> on a member for loans, loan form fees and other details.</li></ol>"],["Money in the box","<p>Meeting &gt; Cash shows money in, loans given, expenses and what is left in the box. Add expenses such as printing loan forms, pens and rulers there. Money &gt; Cash book lists every meeting.</p>"],["Loans","<p>Give a loan with ⋯ on the member (Loan taken). Money &gt; Loans shows what is owed. Tap an unpaid loan to record a repayment.</p>"],["Weekly entry sheet","<p>Saving week &gt; Week sheet lists every member. Type savings, social fund and loan refund in each row and press Enter to jump to the next member. It saves automatically. Tap Fines for fixed fines. New members have a probation period with no savings.</p>"],["Reports and share-out","<p>Reports has a report for one meeting, a monthly report and the end-of-cycle share-out. Each can be downloaded as a spreadsheet.</p>"],["Paying savings ahead","<p>On a member's ⋯ enter the total handed in and the weeks covered (for example 100,000 for 5 weeks). The extra weeks show in yellow and are applied automatically when those meetings are opened. Savings must be even amounts from 2,000 to 20,000 a week; social fund from 1,000 to 10,000.</p>"],["Loans","<p>Interest is 10% for every month started, up to 3 months (30%). A loan not cleared after 3 months adds the penalty. Amounts are set in Setup.</p>"],["Install on your phone","<p>In Chrome, open the menu and tap Install app or Add to Home screen. The calculator button (🧮) also has a loan calculator and a cash counter.</p>"]];
   body(`<button class="btn" data-act="go" data-arg="set" style="margin:0 0 8px">← Back to Setup</button><h2>How to use this app</h2>`+H.map(([t,h])=>`<details><summary>${t}</summary>${h}</details>`).join(""));
 };
 function loanCalc(){

@@ -81,3 +81,12 @@ Loans were not imported because the Loan Register has no loan dates. Record them
 - Pay-ahead savings: enter total handed in and weeks covered on a member's details. Future weeks show in yellow and apply automatically.
 - Cash book: social fund and loan fund balances, short-box warning, cash count with difference, social fund payouts.
 - Share-out uses stars (savings / star value). Group logo is set in Setup.
+
+## Saving week updates (v3)
+
+- **Saving week > Week sheet**: every member listed with ID and name; type savings, social fund and loan refund directly in the row (Enter = next member). Saves automatically and keeps all other details on the record. Roll call (tap mode) is still there.
+- Members have a **Member type** (Old / New). New members have a probation (Setup > Probation weeks, default 3) with no savings, counted from their join date.
+- Registration fee is fixed: old and new rates in Setup. Retention is entered per member on the first week of a cycle.
+- Fines (Setup): missed saving day, missed group meeting, late coming, noise making. Absent/Late attendance adds its fine automatically; others via the Fines button.
+- Loan default penalty is a flat one-time amount (Setup, default 5,000).
+- Reports > This week summarises the current week's transactions.
