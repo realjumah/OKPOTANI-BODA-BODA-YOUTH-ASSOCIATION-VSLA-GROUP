@@ -1,63 +1,90 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b2723">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>VSLA Group Book</title>
 <style>
-:root{--ink:#1b2a41;--paper:#f6f8fa;--card:#fff;--maize:#e8b100;--leaf:#2e7d5b;--red:#b3261e;--line:#d5dce4}
-@media(prefers-color-scheme:dark){:root{--ink:#e6edf5;--paper:#12181f;--card:#1a222c;--line:#2d3844;--maize:#f0c030;--leaf:#4fb286;--red:#f0716a}}
-*{box-sizing:border-box}
-body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink)}
-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1b2a41;color:#f6f8fa}
-header h1{font-size:1.1rem;margin:0}
-main{max-width:720px;margin:0 auto;padding:16px}
-nav{display:flex;gap:2px;margin-bottom:16px;border-bottom:2px solid var(--line);overflow-x:auto}
-nav button{flex:1;padding:10px 8px;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}
-nav button.on{border-color:var(--maize);font-weight:700}
-.box{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
-h2{font-size:1.05rem;margin:0 0 10px}
-label{display:block;font-size:.9rem;margin:8px 0 2px}
-input,select{width:100%;padding:10px;font:inherit;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:inherit}
-button.pri{margin-top:12px;width:100%;padding:12px;font:inherit;font-weight:700;background:var(--maize);color:#1b2a41;border:0;border-radius:4px;cursor:pointer}
-button.sec{padding:10px;font:inherit;background:none;border:1px solid var(--line);border-radius:4px;color:inherit;cursor:pointer;width:100%;margin-top:8px}
-button.lnk{background:none;border:0;color:var(--red);font:inherit;cursor:pointer;padding:4px}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
-.row,.mrow{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);width:100%;text-align:left;align-items:center}
-.mrow{background:none;border-left:0;border-right:0;border-top:0;color:inherit;font:inherit;cursor:pointer}
-.sub{font-size:.85rem;opacity:.7}
-.num{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
-.big{font-size:1.4rem;font-weight:700}
-.stat{display:flex;gap:12px;flex-wrap:wrap}.stat>div{flex:1;min-width:110px}
-.r2{display:flex;gap:8px}.r2>*{flex:1}
-.wide{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem}th,td{padding:6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
-#msg{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#1b2a41;color:#f6f8fa;padding:8px 14px;border-radius:4px;display:none;z-index:9}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal b{text-align:center;font-size:.8rem;opacity:.7}
-.day{min-height:54px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:inherit;font:inherit;cursor:pointer;padding:2px}
-.day.sun{border-color:var(--maize);border-style:dashed}.day.sat{border-style:dotted}
-.day.held{background:var(--leaf);color:#fff;border-style:solid}.day.today{outline:2px solid var(--ink)}
-.day small{display:block;font-size:.7rem}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:5}
-.mr{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
-.mr .mrow{border:0;min-height:50px;flex:1}
-.dots{width:50px;background:none;border:0;border-left:1px solid var(--line);color:inherit;font-size:1.3rem;cursor:pointer}
-.bds{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.bd{font-size:.75rem;font-weight:700;padding:1px 6px;border-radius:10px;border:1px solid var(--line);white-space:nowrap}
-.bd.Present{background:var(--leaf);color:#fff;border-color:var(--leaf)}.bd.Late{background:var(--maize);color:#1b2a41;border-color:var(--maize)}.bd.Absent{background:var(--red);color:#fff;border-color:var(--red)}
-.brush{position:sticky;top:0;z-index:3;background:var(--card);padding:10px 0 6px;border-bottom:2px solid var(--maize)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
-.chip{padding:10px 14px;border:1px solid var(--line);border-radius:20px;background:var(--paper);color:inherit;font:inherit;cursor:pointer}
-.chip[aria-pressed=true]{background:var(--maize);color:#1b2a41;border-color:var(--maize);font-weight:700}
-.sheet{background:var(--paper);width:100%;max-width:560px;max-height:92vh;overflow:auto;padding:16px;border-radius:12px 12px 0 0}
-</style>
-</head>
-<body>
-<header><h1>VSLA Group Book</h1><span class="sub" id="sync" style="color:inherit"></span></header>
-<main id="main"></main>
-<div id="msg" role="status"></div>
 
+:root{--bg:#f4f1ec;--card:#fff;--ink:#22201c;--mut:#6b655b;--line:#ddd6ca;--acc:#f28c00;--accink:#2a1700;--head:#2b2723;--headink:#fff;--ok:#18794e;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171513;--card:#242120;--ink:#efeae2;--mut:#a39b8d;--line:#3a3530;--head:#0f0e0d;--ok:#4cc38a;--bad:#ff7a6b}}
+:root[data-theme="dark"]{--bg:#171513;--card:#242120;--ink:#efeae2;--mut:#a39b8d;--line:#3a3530;--head:#0f0e0d;--ok:#4cc38a;--bad:#ff7a6b}
+*{box-sizing:border-box}html{height:100%}
+body{height:100%;margin:0;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:relative;background:var(--head);color:var(--headink);padding:12px 54px 10px 16px}#hb{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:2px solid var(--acc);background:none;color:var(--headink);font-weight:800;font-size:17px;cursor:pointer}details{background:var(--card);border:1.5px solid var(--line);border-radius:10px;margin-bottom:8px;padding:0 14px}summary{padding:12px 0;font-weight:700;cursor:pointer}details ol,details ul{padding-left:20px;margin:0 0 12px}details li{margin-bottom:6px}details p{margin:0 0 12px}
+h1{margin:0;font-size:19px}h1:before{content:"";display:inline-block;width:14px;height:14px;background:var(--acc);margin-right:8px;transform:rotate(45deg) scale(.8)}
+header small{opacity:.75;font-size:12.5px}
+h2{margin:12px 0 8px;font-size:19px}h3{margin:12px 0 6px;font-size:14px;color:var(--mut)}
+main{flex:1;overflow:auto;padding:12px 14px;width:100%;max-width:960px;margin:0 auto}
+.hide{display:none!important}
+input,select,textarea{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);margin:0 0 10px}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+label{font-size:13px;color:var(--mut);display:block;margin:0 0 3px}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px;cursor:pointer}
+.nm{flex:1;min-width:0}.item b{display:block;overflow-wrap:anywhere}small{color:var(--mut)}
+.pr{font-weight:700;white-space:nowrap;text-align:right}.low{color:var(--bad);font-weight:700}.ok{color:var(--ok)}
+nav{display:flex;background:var(--card);border-top:1px solid var(--line)}
+nav button{flex:1;padding:12px 1px;border:0;background:none;font-weight:700;font-size:13px;color:var(--mut);border-top:4px solid transparent;cursor:pointer}
+nav button.on{color:var(--ink);border-top-color:var(--acc)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat small{display:block}.stat .num{font-size:20px;font-weight:800}
+.stat[role=button]{cursor:pointer;transition:transform .1s}.stat[role=button]:hover{border-color:var(--acc)}.stat[role=button]:active{transform:scale(.97)}.stat.wide{grid-column:1/-1;background:var(--head);color:var(--headink);border-color:var(--head)}.stat.wide small{color:#cfc8bb}
+.btn{display:block;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);font-weight:700;margin-top:8px;cursor:pointer}
+.btn.big{background:var(--acc);color:var(--accink);border-color:var(--acc);font-size:17px}.btn.del{color:var(--bad)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.seg button{flex:1;min-width:30%;padding:9px 2px;font-size:13.5px;border:1.5px solid var(--line);border-radius:99px;background:var(--card);font-weight:700;cursor:pointer}.seg button.on{background:var(--acc);border-color:var(--acc);color:var(--accink)}
+.empty{color:var(--mut);text-align:center;padding:20px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin:6px 0 4px}.bars div{flex:1;background:var(--acc);border-radius:4px 4px 0 0;min-height:2px}
+.lab{display:flex;gap:6px}.lab small{flex:1;text-align:center;font-size:11px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-size:12px}
+.qty{display:flex;gap:6px}.qty input{margin:0;padding:8px}
+#md{position:fixed;inset:0;background:#000a;display:flex;align-items:flex-end;justify-content:center;z-index:9}
+#md>div{background:var(--bg);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:16px 16px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+#cb{position:fixed;right:14px;bottom:calc(66px + env(safe-area-inset-bottom,0px));width:50px;height:50px;border-radius:50%;border:0;background:var(--acc);color:var(--accink);font-size:23px;box-shadow:0 2px 8px #0006;z-index:5;cursor:pointer}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.kp button{padding:15px 0;font-size:21px;font-weight:700;border:1.5px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer}.kp .op{background:var(--acc);border-color:var(--acc);color:var(--accink)}.kp .fn{color:var(--bad)}
+.tw tr.tap{cursor:pointer}.tw tr.tap td:first-child{color:var(--acc);font-weight:700;text-decoration:underline dotted}.tw tr.tap:hover td{background:rgba(242,140,0,.12)}.tw tr.tap:active td{background:rgba(242,140,0,.22)}
+#ts{position:fixed;left:50%;bottom:calc(122px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--head);color:var(--headink);padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:20;font-weight:700;box-shadow:0 2px 10px #0006}#ts.show{opacity:1;transform:translate(-50%,0)}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes sl{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+main>*{animation:up .22s ease both}#md>div{animation:sl .22s ease}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#pv{background:#fff;color:#000;border-radius:10px;padding:14px;margin:10px 0}#pv h2,#pv h3,#pv h4{margin:4px 0;color:#000}#pv table{background:#fff;color:#000;font-size:14px}#pv td{white-space:normal;padding:5px 4px;border-bottom:1px solid #ccc}#pv td:last-child{text-align:right;font-weight:700;white-space:nowrap}#pv td:nth-child(2){text-align:left;color:#555}.pcat{break-inside:avoid;margin-bottom:10px}.pcat h4{background:#f28c00;color:#2a1700!important;padding:3px 6px}.chk{display:flex;gap:8px;align-items:center;margin:0 0 6px}.chk input{width:auto;margin:0}
+
+:root{--paper:var(--bg);--maize:var(--acc);--leaf:var(--ok);--red:var(--bad)}
+.box{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.pri{display:block;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--acc);background:var(--acc);color:var(--accink);font-weight:700;font-size:17px;margin-top:8px;cursor:pointer}
+.sec{display:block;width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);font-weight:700;margin-top:8px;cursor:pointer}
+.lnk{background:none;border:0;color:var(--bad);font-weight:700;cursor:pointer;padding:4px}
+.sub{font-size:13px;color:var(--mut)}.stat.wide .sub{color:#cfc8bb}.stat.wide .sec{color:var(--ink)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.r2{display:flex;gap:8px}.r2>*{flex:1}
+.num{font-variant-numeric:tabular-nums}
+.mr{display:flex;background:var(--card);border:1.5px solid var(--line);border-radius:10px;margin-bottom:6px;overflow:hidden}
+.mrow{flex:1;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:52px;padding:6px 12px;background:none;border:0;text-align:left;cursor:pointer}
+.dots{width:50px;background:none;border:0;border-left:1.5px solid var(--line);font-size:1.3rem;cursor:pointer}
+.bds{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.bd{font-size:12px;font-weight:700;padding:1px 7px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.bd.Present{background:var(--ok);color:#fff;border-color:var(--ok)}.bd.Late{background:var(--acc);color:var(--accink);border-color:var(--acc)}.bd.Absent{background:var(--bad);color:#fff;border-color:var(--bad)}
+.brush{position:sticky;top:0;z-index:3;background:var(--bg);padding:2px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.chip{padding:10px 14px;border:1.5px solid var(--line);border-radius:99px;background:var(--card);font-weight:700;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal b{text-align:center;font-size:12px;color:var(--mut)}
+.day{min-height:54px;border:1.5px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;padding:2px}
+.day.sun{border-color:var(--acc);border-style:dashed}.day.sat{border-style:dotted}
+.day.held{background:var(--ok);color:#fff;border-style:solid;border-color:var(--ok)}.day.today{outline:2px solid var(--ink)}
+.day small{display:block;font-size:11px;color:inherit}
+
+</style>
+</head><body>
+<header><h1 id="hn">VSLA Group Book</h1><small id="ha"></small><button id="installApp" aria-label="Install app" style="position:absolute;right:54px;top:12px;height:34px;padding:0 9px;border:1px solid #f28c00;border-radius:8px;background:transparent;color:inherit;font-size:12px;font-weight:700;display:none">Install</button><button id="hb" aria-label="How to use this app" data-act="go" data-arg="help">?</button></header>
+<main id="main"></main>
+<nav id="nv"></nav>
+<button id="cb" aria-label="Calculator" data-act="calc" hidden>🧮</button>
+<div id="md" class="hide"></div>
 <script type="module">
+
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,writeBatch,onSnapshot,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -76,11 +103,11 @@ const firebaseConfig = {
 const app=initializeApp(firebaseConfig), auth=getAuth(app);
 const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 
-const S={user:null,groups:[],gid:null,members:[],meetings:[],entries:[],expenses:[],tab:"meeting",date:null,cal:new Date(),modal:false,brush:{g:"Attendance",k:"attendance",v:"Present",l:"Attendance: Present"},q:"",hide:false,pick:false};
+const S={user:null,groups:[],gid:null,members:[],meetings:[],entries:[],expenses:[],tab:"home",msub:"sheet",sub:"loans",rsub:"meet",mq:"",mon:new Date().toISOString().slice(0,7),date:null,cal:new Date(),modal:false,brush:{g:"Attendance",k:"attendance",v:"Present",l:"Attendance: Present"},q:"",hide:false,pick:false};
 let unsubs=[],gUn=[],watching=null;
 const $=s=>document.querySelector(s),N=v=>+v||0,money=n=>Math.round(n||0).toLocaleString();
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const toast=t=>{const m=$("#msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",2600)};
+const toast=m=>{let e=$("#ts");if(!e){e=document.createElement("div");e.id="ts";document.body.appendChild(e)}e.textContent=m;e.className="show";clearTimeout(e.t);e.t=setTimeout(()=>e.className="",2400)};
 const pad=n=>String(n).padStart(2,"0"),iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const P=s=>{const[a,b,c]=s.split("-");return new Date(+a,b-1,+c)};
 const AD=(s,n)=>{const d=P(s);d.setDate(d.getDate()+n);return iso(d)};
@@ -97,14 +124,14 @@ const paid=e=>N(e.registration)+N(e.retention)+N(e.savings)+N(e.socialFund)+N(e.
 const mOf=id=>S.members.find(m=>m.id===id)||{name:"Unknown",memberNo:"?"};
 const sumE=(es,k)=>es.reduce((a,e)=>a+N(e[k]),0);
 async function bulk(items){for(let i=0;i<items.length;i+=400){const b=writeBatch(db);items.slice(i,i+400).forEach(([r,d])=>b.set(r,d,{merge:true}));await b.commit()}}
-window.addEventListener("online",()=>$("#sync").textContent="");
-window.addEventListener("offline",()=>$("#sync").textContent="Offline: saving on phone");
+window.addEventListener("online",()=>toast("Back online"));
+window.addEventListener("offline",()=>toast("Offline: saving on this phone"));
 
 /* ---------- AUTH ---------- */
 const emailOf=p=>p.replace(/\D/g,"")+"@savingsbook.app";
 function stop(){unsubs.forEach(f=>f());unsubs=[];gUn.forEach(f=>f());gUn=[];watching=null}
 function login(){
-  stop();
+  stop();$("#nv").innerHTML="";$("#cb").hidden=true;$("#hn").textContent="VSLA Group Book";$("#ha").textContent="";
   $("#main").innerHTML=`<div class="box"><h2>Sign in</h2><label for="ph">Phone number</label><input id="ph" inputmode="tel" placeholder="0772123456"><label for="pin">6-digit PIN</label><input id="pin" type="password" inputmode="numeric" maxlength="6"><button class="pri" id="in">Sign in</button><button class="pri" id="up" style="background:var(--leaf);color:#fff">Create account</button></div>`;
   const run=async fn=>{const ph=$("#ph").value,pin=$("#pin").value;
     if(ph.replace(/\D/g,"").length<9||!/^\d{6}$/.test(pin))return toast("Enter a valid phone number and a 6-digit PIN");
@@ -121,6 +148,7 @@ onAuthStateChanged(auth,u=>{
   }));
 });
 function createGroup(){
+  $("#nv").innerHTML="";$("#cb").hidden=true;
   $("#main").innerHTML=`<div class="box"><h2>Create your group</h2><label for="gn">Group name</label><input id="gn" placeholder="e.g. OYBA Build Up"><button class="pri" id="mk">Create group</button><button class="lnk" id="out">Sign out</button></div>`;
   $("#mk").onclick=async()=>{const name=$("#gn").value.trim();if(!name)return toast("Enter a group name");
     await addDoc(collection(db,"groups"),{name,ownerId:S.user.uid,createdAt:serverTimestamp()})};
@@ -135,24 +163,58 @@ function watch(){
 function fixIds(){const miss=S.members.filter(m=>!m.memberNo);if(!miss.length)return;let n=S.members.reduce((a,m)=>Math.max(a,m.memberNo||0),0);
   miss.sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0)).forEach(m=>updateDoc(gdoc("members",m.id),{memberNo:++n,status:m.status||"Active",gender:m.gender||"",village:m.village||"",contact:m.contact||m.phone||"",joinDate:m.joinDate||""}))}
 
-/* ---------- SHELL ---------- */
+
+/* ---------- TEMPLATE HELPERS (same look as the hardware app) ---------- */
 const V={};
-function shell(){
-  const T=[["meeting","Meeting"],["calendar","Calendar"],["members","Members"],["loans","Loans"],["summary","Summary"],["tools","Tools"]];
-  $("#main").innerHTML=`<div class="sub" style="margin-bottom:8px">${esc(G().name)} <button class="lnk" id="out" style="color:inherit;text-decoration:underline">Sign out</button></div><nav>${T.map(([k,l])=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${l}</button>`).join("")}</nav><div id="body"></div>`;
-  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;shell()});
-  $("#out").onclick=()=>signOut(auth);refresh(true);scrollTo(0,0);
+const TABS=[["home","Home"],["meeting","Meeting"],["members","Members"],["money","Money"],["rep","Reports"],["set","Setup"]];
+const card=(l,v,o={})=>`<div class="stat${o.w?" wide":""}"${o.g?` role="button" tabindex="0" data-act="go" data-arg="${o.g}"`:""}><small>${l}</small><span class="num ${o.c||""}">${v}</span></div>`;
+const item=(t,s,r,a,cls="")=>{const tg=a?"button":"div";return `<${tg} class="item"${a?` data-act="${a[0]}" data-arg="${esc(a[1])}"`:' style="cursor:default"'}><span class="nm"><b>${t}</b><small>${s||""}</small></span><span class="pr ${cls}">${r??""}</span></${tg}>`};
+const seg=(arr,cur,act)=>`<div class="seg">${arr.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="${act}" data-arg="${k}">${l}</button>`).join("")}</div>`;
+const empty=t=>`<div class="empty">${t}</div>`;
+const body=h=>$("#body").innerHTML=h;
+const inp=(id,l,t="text",v="",x="")=>`<label for="${id}">${l}</label><input id="${id}" type="${t}" ${t==="number"?'inputmode="numeric" min="0"':""} value="${esc(v)}" ${x}>`;
+const sumA=(a,f)=>a.reduce((x,y)=>x+f(y),0);
+function modal(h){const m=$("#md");S.modal=!!h;if(!h){m.classList.add("hide");m.innerHTML="";return}m.innerHTML="<div>"+h+"</div>";m.classList.remove("hide")}
+$("#md").onclick=e=>{if(e.target.id==="md"){modal();refresh(true)}};
+function form(title,F,v,onsave,del){
+  modal(`<h2>${title}</h2>`+F.map(([k,l,t,o])=>`<label for="f_${k}">${l}</label>`+(t==="select"?`<select id="f_${k}">${o.map(x=>`<option ${x===v[k]?"selected":""}>${esc(x)}</option>`).join("")}</select>`:`<input id="f_${k}" type="${t}" ${t==="number"?'inputmode="numeric"':""} value="${esc(v[k]??"")}">`)).join("")+`<button class="btn big" id="fs">Save</button>${del?`<button class="btn del" id="fd">Delete</button>`:""}<button class="btn" id="fc">Cancel</button>`);
+  const done=()=>{modal();refresh(true)};
+  $("#fc").onclick=done;
+  $("#fs").onclick=async()=>{const r={};F.forEach(([k,,t])=>{const x=$("#f_"+k).value;r[k]=t==="number"?N(x):x.trim()});if(await onsave(r)!==false)done()};
+  if(del)$("#fd").onclick=async()=>{if(confirm("Delete this record?")){await del();done()}};
 }
+function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+const csvOut=rows=>rows.map(r=>r.map(x=>/[",\n]/.test(x)?'"'+String(x).replace(/"/g,'""')+'"':x).join(",")).join("\n");
+
+const ACT={
+  go:a=>{const[t,s]=a.split(":");S.tab=t;if(s){if(t==="money")S.sub=s;if(t==="rep")S.rsub=s;if(t==="meeting")S.msub=s}shell()},
+  msub:a=>{S.msub=a;refresh(true)},sub:a=>{S.sub=a;refresh(true)},rsub:a=>{S.rsub=a;refresh(true)},
+  open:a=>openMeeting(a),mem:a=>memberView(a),addm:()=>memberForm(),addx:()=>expForm(),editx:a=>expForm(a),rep:a=>repay(a),
+  calc:()=>calc(),loancalc:()=>loanCalc(),cashcount:()=>cashCount(),csv:a=>exportCsv(a)
+};
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(el&&ACT[el.dataset.act])ACT[el.dataset.act](el.dataset.arg,el)});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches&&e.target.matches(".stat[role=button]"))e.target.click()});
+
+function shell(){
+  $("#nv").innerHTML=TABS.map(([k,l])=>`<button class="${S.tab===k?"on":""}" data-act="go" data-arg="${k}">${l}</button>`).join("");
+  $("#cb").hidden=false;$("#main").innerHTML='<div id="body"></div>';head();refresh(true);$("#main").scrollTop=0;
+}
+function head(){const g=G(),d=S.date;$("#hn").textContent=g?g.name:"VSLA Group Book";$("#ha").textContent=d&&dates().includes(d)?`Wk ${wk(d)} · ${fmt(d)}`:"Weekly savings group"}
 function refresh(force){
   if(!S.gid||!$("#body"))return;
   const a=document.activeElement;
-  if(!force&&(S.modal||S.tab==="tools"||(a&&$("#body").contains(a)&&/INPUT|SELECT/.test(a.tagName))))return;
-  const y=scrollY;V[S.tab]();scrollTo(0,y);
+  if(!force&&(S.modal||S.tab==="set"||S.tab==="help"||(a&&$("#body").contains(a)&&/INPUT|SELECT/.test(a.tagName))))return;
+  const y=$("#main").scrollTop;V[S.tab]();head();$("#main").scrollTop=y;
 }
-const body=h=>$("#body").innerHTML=h;
-const inp=(id,l,t="text",v="",x="")=>`<label for="${id}">${l}</label><input id="${id}" type="${t}" ${t==="number"?'inputmode="numeric" min="0"':""} value="${esc(v)}" ${x}>`;
-
-/* ---------- MEETING (weekly sheet) ---------- */
+async function openMeeting(d){
+  if(!dates().includes(d)){setDoc(gdoc("meetings",d),{date:d});const t0=Date.now();while(!dates().includes(d)&&Date.now()-t0<2000)await new Promise(r=>setTimeout(r,40))}
+  S.date=d;S.tab="meeting";S.msub="sheet";shell();
+}
+const MS=[["sheet","Roll call"],["cal","Calendar"],["cash","Cash"]];
+const msg=()=>seg(MS,S.msub,"msub");
+const picker=(ds,d)=>`<label for="mpk">Meeting</label><select id="mpk">${[...ds].reverse().map(x=>`<option value="${x}" ${x===d?"selected":""}>Wk ${wk(x)} · ${fmt(x)}</option>`).join("")}</select>`;
+const noMeet=`<div class="box"><h2>No meetings yet</h2><p class="sub">Open the Calendar tab and tap a Sunday or Saturday to start the first meeting.</p></div>`;
+V.meeting=()=>S.msub==="cal"?vCal():S.msub==="cash"?vCash():vSheet();
 function brushes(){
   const c=cfg(),ch=s=>String(s||"").split(",").map(x=>+x.trim()).filter(x=>x>0);
   const mk=(g,k,arr)=>({g,items:arr.map(([t,v])=>({g,k,v,t,l:v==="?"?g+": other amount":g+": "+t}))});
@@ -172,21 +234,20 @@ function apply(mid){
   e.totalFines=fines(e);e.totalPaid=paid(e);
   setDoc(gdoc("entries",id),e).catch(x=>toast("Could not save: "+x.code));
 }
-V.meeting=()=>{
+const vSheet=()=>{
   const ds=dates();
-  if(!ds.length)return body(`<div class="box"><h2>No meetings yet</h2><p class="sub">Open the Calendar tab and tap a Sunday or Saturday to start the first meeting.</p></div>`);
+  if(!ds.length)return body(msg()+`<div class="box"><h2>No meetings yet</h2><p class="sub">Open the Calendar tab and tap a Sunday or Saturday to start the first meeting.</p></div>`);
   if(!ds.includes(S.date))S.date=ds[ds.length-1];
   const d=S.date,es=S.entries.filter(e=>e.date===d),EM=Object.fromEntries(es.map(e=>[e.memberId,e])),c=x=>es.filter(e=>e.attendance===x).length,sat=P(d).getDay()===6;
   const B=brushes(),b=S.brush,act=mem().filter(m=>m.status!=="Inactive"),has=e=>e&&(b.k==="attendance"?!!e.attendance:N(e[b.k])>0);
   const done=act.filter(m=>has(EM[m.id])).length;
   const tot=b.k==="attendance"?`${c("Present")} present · ${c("Late")} late · ${c("Absent")} absent`:"total "+money(sumE(es,b.k));
-  body(`<div class="box"><label for="md">Meeting</label><select id="md">${[...ds].reverse().map(x=>`<option value="${x}" ${x===d?"selected":""}>Wk ${wk(x)} · ${fmt(x)}</option>`).join("")}</select>
+  body(msg()+`<div class="box"><label for="mpk">Meeting</label><select id="mpk">${[...ds].reverse().map(x=>`<option value="${x}" ${x===d?"selected":""}>Wk ${wk(x)} · ${fmt(x)}</option>`).join("")}</select>
   <div class="r2"><button class="sec" id="mv">${sat?"Move to Sunday":"Move to Saturday"}</button><button class="sec" id="cd">Change date</button></div><button class="sec" id="allp">Mark everyone without a record as Present</button></div>
-  <div class="box" style="padding-top:0"><div class="brush"><div class="r2" style="align-items:center"><div><b>${esc(b.l)}</b><div class="sub">${done} of ${act.length} done · ${tot}</div></div><button class="sec" id="chg" style="margin:0;flex:none;width:auto" aria-expanded="${S.pick}">${S.pick?"Close":"Change"}</button></div>
+  <div class="brush"><div class="stat wide" style="margin-bottom:6px"><div class="r2" style="align-items:center"><div><b>${esc(b.l)}</b><div class="sub">${done} of ${act.length} done · ${tot}</div></div><button class="sec" id="chg" style="margin:0;flex:none;width:auto" aria-expanded="${S.pick}">${S.pick?"Close":"Change"}</button></div></div>
   ${S.pick?`<div style="margin-top:8px">${B.map((g,gi)=>`<div class="sub">${g.g}</div><div class="chips">${g.items.map((it,ii)=>`<button class="chip" data-b="${gi}:${ii}" aria-pressed="${b.k===it.k&&b.v===it.v}">${esc(it.t)}</button>`).join("")}</div>`).join("")}<p class="sub">Late and absent fines are added automatically from the amounts in Tools &gt; Group settings.</p></div>`:""}
   <div class="r2" style="margin-top:8px"><input id="q" placeholder="Search name or ID" aria-label="Search member" value="${esc(S.q)}"><button class="sec" id="hid" aria-pressed="${S.hide}" style="margin:0">${S.hide?"Show all":"Hide done"}</button></div></div>
-  <p class="sub">Choose an action above, then tap each member's name to apply it. Tap again to undo. Use ⋯ for loans, fees and other details.</p><div id="ml"></div></div>
-  ${summaryBox(d,es,c)}`);
+  <p class="sub">Choose an action above, then tap each member's name to apply it. Tap again to undo. Use ⋯ for loans, fees and other details.</p><div id="ml"></div>`);
   const att={Present:"P",Late:"L",Absent:"A"};
   const paint=()=>{const q=S.q.toLowerCase();
     $("#ml").innerHTML=act.filter(m=>(!q||m.name.toLowerCase().includes(q)||String(m.memberNo)===q)&&!(S.hide&&has(EM[m.id]))).map(m=>{const e=EM[m.id]||{};
@@ -197,7 +258,7 @@ V.meeting=()=>{
   paint();$("#q").oninput=e=>{S.q=e.target.value;paint()};
   $("#chg").onclick=()=>{S.pick=!S.pick;V.meeting()};$("#hid").onclick=()=>{S.hide=!S.hide;V.meeting()};
   document.querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>{const[g,i]=x.dataset.b.split(":");S.brush=B[g].items[i];S.pick=false;V.meeting()});
-  $("#md").onchange=e=>{S.date=e.target.value;V.meeting()};bindCash(d);
+  $("#mpk").onchange=e=>{S.date=e.target.value;V.meeting()};
   $("#mv").onclick=()=>moveMeeting(d,AD(d,sat?1:-1));
   $("#cd").onclick=()=>{const n=prompt("New date (YYYY-MM-DD)",d);if(n&&/^\d{4}-\d\d-\d\d$/.test(n))moveMeeting(d,n);else if(n)toast("Use the format YYYY-MM-DD")};
   $("#allp").onclick=async()=>{const items=act.filter(m=>!EM[m.id]).map(m=>[gdoc("entries",d+"_"+m.id),{date:d,memberId:m.id,attendance:"Present",totalFines:0,totalPaid:0}]);
@@ -218,18 +279,22 @@ function cash(d){
   r.in=r.reg+r.ret+r.sav+r.sf+r.fee+r.fin+r.rep;r.net=r.in-r.loan-r.exp;return r;
 }
 function book(){let bal=N(cfg().openingBalance);return dates().map(d=>{const r=cash(d);r.d=d;r.open=bal;bal+=r.net;r.close=bal;return r})}
-function summaryBox(d,es,c){
-  const r=cash(d),b=book().find(x=>x.d===d),row=(l,v,s)=>`<div class="row"${s?' style="font-weight:700"':""}><span>${l}</span><span class="num">${money(v)}</span></div>`;
-  return `<div class="box"><h2>Money in</h2>${row("Registration",r.reg)}${row("Retention",r.ret)}${row("Savings",r.sav)}${row("Social fund",r.sf)}${row("Loan form fees",r.fee)}${row("Fines",r.fin)}${row("Loan repayments",r.rep)}${row("Total money in",r.in,1)}</div>
-  <div class="box"><h2>Money out</h2>${row("Loans given",r.loan)}${r.exs.map(x=>`<div class="row"><span>${esc(x.item)}</span><span><b class="num">${money(x.amount)}</b> <button class="lnk" data-xd="${x.id}" aria-label="Delete expense ${esc(x.item)}">Delete</button></span></div>`).join("")}${row("Total expenses",r.exp)}${row("Total money out",r.loan+r.exp,1)}
-  ${inp("xi","Add expense (e.g. printing loan forms, pens, rulers)")}${inp("xa","Amount","number")}<button class="sec" id="xadd">Add expense</button></div>
-  <div class="box">${row("Brought forward",b.open)}${row("Left from this meeting",r.net)}${row("Money in the box now",b.close,1)}<p class="sub">Includes the social fund (${money(r.sf)} collected this meeting). Attendance: ${c("Present")} present, ${c("Late")} late, ${c("Absent")} absent.</p><button class="sec" id="shr">Share summary</button></div>`;
-}
 function bindCash(d){
   $("#xadd").onclick=async()=>{const item=$("#xi").value.trim(),amount=N($("#xa").value);if(!item||!(amount>0))return toast("Enter what was bought and the amount");await addDoc(gcol("expenses"),{date:d,item,amount,createdAt:serverTimestamp()});toast("Expense added")};
   document.querySelectorAll("[data-xd]").forEach(b=>b.onclick=async()=>{if(confirm("Delete this expense?"))await deleteDoc(gdoc("expenses",b.dataset.xd))});
   $("#shr").onclick=async()=>{const r=cash(d),b=book().find(x=>x.d===d),t=`${G().name} - Wk ${wk(d)}, ${fmt(d)}\nSavings: ${money(r.sav)}\nSocial fund: ${money(r.sf)}\nFines: ${money(r.fin)}\nLoan form fees: ${money(r.fee)}\nLoan repayments: ${money(r.rep)}\nRegistration and retention: ${money(r.reg+r.ret)}\nTotal money in: ${money(r.in)}\nLoans given: ${money(r.loan)}\nExpenses: ${money(r.exp)}${r.exs.map(x=>`\n  - ${x.item}: ${money(x.amount)}`).join("")}\nMoney in the box: ${money(b.close)}`;
     try{navigator.share?await navigator.share({text:t}):(await navigator.clipboard.writeText(t),toast("Summary copied"))}catch{}};
+}
+
+function vCash(){
+  const ds=dates();if(!ds.length)return body(msg()+noMeet);
+  if(!ds.includes(S.date))S.date=ds[ds.length-1];
+  const d=S.date,r=cash(d),b=book().find(x=>x.d===d),ln=(l,v)=>item(l,"",money(v));
+  body(msg()+`<div class="box">${picker(ds,d)}</div><div class="cards">${card("Money in the box now","UGX "+money(b.close),{w:1})}${card("Money in",money(r.in))}${card("Money out",money(r.loan+r.exp))}${card("Left from this meeting",money(r.net),{c:r.net<0?"low":"ok"})}${card("Brought forward",money(b.open))}</div>
+  <h3>Money in</h3>${ln("Registration",r.reg)}${ln("Retention",r.ret)}${ln("Savings",r.sav)}${ln("Social fund",r.sf)}${ln("Loan form fees",r.fee)}${ln("Fines",r.fin)}${ln("Loan repayments",r.rep)}
+  <h3>Money out</h3>${ln("Loans given",r.loan)}${r.exs.map(x=>`<div class="item" style="cursor:default"><span class="nm"><b>${esc(x.item)}</b></span><span class="pr">${money(x.amount)}<br><button class="lnk" data-xd="${x.id}" aria-label="Delete expense ${esc(x.item)}">Delete</button></span></div>`).join("")}${ln("Total expenses",r.exp)}
+  <h3>Add an expense</h3>${inp("xi","What was bought (e.g. printing loan forms, pens, rulers)")}${inp("xa","Amount","number")}<button class="btn big" id="xadd" style="margin-top:0">Add expense</button><button class="btn" id="shr">Share summary</button><p class="sub">The box includes the social fund (${money(r.sf)} collected this meeting).</p>`);
+  $("#mpk").onchange=e=>{S.date=e.target.value;vCash()};bindCash(d);
 }
 const KEYS=["registration","retention","savings","socialFund","loanTaken","loanRepayment","loanFormFee","absentFine","lateFine","noiseFine","otherFines"];
 function openEntry(mid){
@@ -237,53 +302,37 @@ function openEntry(mid){
   const e=old||{retention:c.retentionPerWeek||"",loanRate:c.interestRate};
   S.modal=true;
   const f=(k,l)=>inp("f_"+k,l,"number",e[k]??"");
-  const box=document.createElement("div");box.className="modal";
-  box.innerHTML=`<div class="sheet" role="dialog" aria-label="Weekly record"><h2>#${m.memberNo} ${esc(m.name)}</h2><div class="sub">Wk ${wk(d)} · ${fmt(d)}</div>
+  modal(`<h2>#${m.memberNo} ${esc(m.name)}</h2><div class="sub">Wk ${wk(d)} · ${fmt(d)}</div>
   <label for="f_att">Attendance</label><select id="f_att">${["","Present","Late","Absent"].map(x=>`<option value="${x}" ${e.attendance===x?"selected":""}>${x||"Not recorded"}</option>`).join("")}</select>
   ${f("registration","Registration")}${f("retention","Retention")}${f("savings","Savings")}${f("socialFund","Social fund")}${f("loanTaken","Loan taken")}${inp("f_loanRate","Loan interest (%)","number",e.loanRate??c.interestRate)}${f("loanRepayment","Loan repayment")}${f("loanFormFee","Loan form fee")}${f("absentFine","Absent fine")}${f("lateFine","Late fine")}${f("noiseFine","Noise fine")}${f("otherFines","Other fines")}
-  <div class="box" id="tot" style="margin-top:12px"></div><button class="pri" id="sv">Save</button><button class="sec" id="cl">Cancel</button>${old?`<button class="lnk" id="rm">Clear this record</button>`:""}</div>`;
-  document.body.appendChild(box);
+  <div class="box" id="tot" style="margin-top:12px"></div><button class="pri" id="sv">Save</button><button class="sec" id="cl">Cancel</button>${old?`<button class="lnk" id="rm">Clear this record</button>`:""}`);
   const get=()=>{const o={attendance:$("#f_att").value,loanRate:N($("#f_loanRate").value)};KEYS.forEach(k=>o[k]=N($("#f_"+k).value));return o};
   const tot=()=>{const o=get();$("#tot").innerHTML=`Total fines <b>${money(fines(o))}</b><br>Total paid <b>${money(paid(o))}</b>`};
-  box.querySelectorAll("input").forEach(i=>i.oninput=tot);tot();
+  $("#md").querySelectorAll("input").forEach(i=>i.oninput=tot);tot();
   $("#f_loanTaken").addEventListener("input",()=>{if(N($("#f_loanTaken").value)>0&&!$("#f_loanFormFee").value&&c.loanFormFee){$("#f_loanFormFee").value=c.loanFormFee;tot()}});
   $("#f_att").onchange=ev=>{const a=ev.target.value;$("#f_absentFine").value=a==="Absent"&&c.absentFine?c.absentFine:"";$("#f_lateFine").value=a==="Late"&&c.lateFine?c.lateFine:"";tot()};
-  const close=()=>{box.remove();S.modal=false;refresh(true)};
+  const close=()=>{modal();refresh(true)};
   $("#cl").onclick=close;
   $("#sv").onclick=async()=>{const o=get();try{await setDoc(gdoc("entries",d+"_"+mid),{...o,date:d,memberId:mid,totalFines:fines(o),totalPaid:paid(o)});close();toast("Saved")}catch(x){toast("Could not save: "+x.code)}};
   if(old)$("#rm").onclick=async()=>{if(confirm("Clear this record?")){await deleteDoc(gdoc("entries",d+"_"+mid));close()}};
 }
 
 /* ---------- CALENDAR ---------- */
-V.calendar=()=>{
+const vCal=()=>{
   const y=S.cal.getFullYear(),mo=S.cal.getMonth(),n=new Date(y,mo+1,0).getDate(),ds=dates(),td=iso(new Date()),t=new Date();
   let cells=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<b>${x}</b>`).join("")+"<span></span>".repeat(new Date(y,mo,1).getDay());
   for(let i=1;i<=n;i++){const dt=new Date(y,mo,i),s=iso(dt),w=dt.getDay(),h=ds.includes(s);
     cells+=`<button class="day ${h?"held":""} ${w===0?"sun":w===6?"sat":""} ${s===td?"today":""}" data-d="${s}" aria-label="${fmt(s)}${h?", meeting week "+wk(s):""}">${i}${h?`<small>Wk ${wk(s)}</small>`:""}</button>`}
   const nx=new Date(t);nx.setDate(t.getDate()+(7-t.getDay())%7);const ns=iso(nx);nx.setDate(nx.getDate()-1);const nsat=iso(nx);
-  body(`<div class="box"><div class="r2" style="align-items:center"><button class="sec" id="pv" aria-label="Previous month">‹</button><h2 style="text-align:center;margin:0">${S.cal.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</h2><button class="sec" id="nx" aria-label="Next month">›</button></div><div class="cal" style="margin-top:10px">${cells}</div>
+  body(msg()+`<div class="box"><div class="r2" style="align-items:center"><button class="sec" id="pv" aria-label="Previous month">‹</button><h2 style="text-align:center;margin:0">${S.cal.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}</h2><button class="sec" id="nx" aria-label="Next month">›</button></div><div class="cal" style="margin-top:10px">${cells}</div>
   <p class="sub">Green = meeting held. Dashed gold = Sunday, dotted = Saturday. Tap any date to open or start a meeting.</p></div>
   <div class="box"><h2>Next meeting</h2>${ds.includes(ns)?"":`<button class="sec" data-s="${ns}">Start meeting: ${fmt(ns)}</button>`}${ds.includes(nsat)?"":`<button class="sec" data-s="${nsat}">Start meeting: ${fmt(nsat)} (Saturday)</button>`}</div>`);
-  $("#pv").onclick=()=>{S.cal=new Date(y,mo-1,1);V.calendar()};$("#nx").onclick=()=>{S.cal=new Date(y,mo+1,1);V.calendar()};
-  const open=async s=>{if(!dates().includes(s)){if(!confirm("Start a meeting on "+fmt(s)+"?"))return;await setDoc(gdoc("meetings",s),{date:s})}S.date=s;S.tab="meeting";shell()};
+  $("#pv").onclick=()=>{S.cal=new Date(y,mo-1,1);vCal()};$("#nx").onclick=()=>{S.cal=new Date(y,mo+1,1);vCal()};
+  const open=s=>{if(!dates().includes(s)&&!confirm("Start a meeting on "+fmt(s)+"?"))return;openMeeting(s)};
   document.querySelectorAll("[data-d],[data-s]").forEach(b=>b.onclick=()=>open(b.dataset.d||b.dataset.s));
 };
 S.cal=new Date(S.cal.getFullYear(),S.cal.getMonth(),1);
 
-/* ---------- MEMBERS ---------- */
-V.members=()=>{
-  const ms=mem(),next=ms.reduce((a,m)=>Math.max(a,m.memberNo),0)+1;
-  body(`<div class="box"><h2>Add member (ID ${next})</h2>${inp("mn","Full name")}<label for="mg">Gender</label><select id="mg"><option>M</option><option>F</option></select>${inp("mvl","Village")}${inp("mc","Contact","tel")}${inp("mj","Join date","date",iso(new Date()))}<button class="pri" id="go">Add member</button></div>
-  <div class="box"><h2>Members (${ms.length})</h2>${ms.map(m=>`<div class="row"><div>#${m.memberNo} ${esc(m.name)}<div class="sub">${esc(m.gender||"")} · ${esc(m.village||"")} · ${esc(m.contact||"")} · joined ${esc(m.joinDate||"")}</div></div><div><button class="lnk" style="color:${m.status==="Inactive"?"var(--red)":"var(--leaf)"}" data-st="${m.id}">${m.status||"Active"}</button><button class="lnk" data-del="${m.id}" aria-label="Delete ${esc(m.name)}">Delete</button></div></div>`).join("")||`<p class="sub">No members yet. Add one above or import your list in Tools.</p>`}</div>`);
-  $("#go").onclick=async()=>{const name=$("#mn").value.trim();if(!name)return toast("Enter a name");
-    await setDoc(gdoc("members","m"+next),{memberNo:next,name,gender:$("#mg").value,village:$("#mvl").value.trim(),contact:$("#mc").value.trim(),joinDate:$("#mj").value,status:"Active"});toast("Member added")};
-  document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const m=S.members.find(x=>x.id===b.dataset.st);updateDoc(gdoc("members",m.id),{status:m.status==="Inactive"?"Active":"Inactive"})});
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{const id=b.dataset.del;
-    if(S.entries.some(e=>e.memberId===id))return toast("This member has records. Set them to Inactive instead");
-    if(confirm("Delete this member?"))await deleteDoc(gdoc("members",id))});
-};
-
-/* ---------- LOANS ---------- */
 function loans(){
   const c=cfg(),L=[],rep={};
   S.entries.filter(e=>N(e.loanTaken)>0).sort((a,b)=>a.date<b.date?-1:1).forEach(e=>{const r=e.loanRate??c.interestRate,i=N(e.loanTaken)*r/100;
@@ -292,46 +341,141 @@ function loans(){
   L.forEach(l=>{const t=Math.min(rep[l.mid]||0,l.due);rep[l.mid]=(rep[l.mid]||0)-t;l.repaid=t;l.out=l.due-t;l.status=l.out<=0?"Cleared":l.dueDate<iso(new Date())?"Overdue":"Active"});
   return L;
 }
-V.loans=()=>{
-  const L=loans();
-  body(`<div class="box stat"><div><div class="sub">Loaned out</div><div class="big">${money(L.reduce((a,l)=>a+l.amount,0))}</div></div><div><div class="sub">Interest due</div><div class="big">${money(L.reduce((a,l)=>a+l.interest,0))}</div></div><div><div class="sub">Repaid</div><div class="big">${money(L.reduce((a,l)=>a+l.repaid,0))}</div></div><div><div class="sub">Outstanding</div><div class="big">${money(L.reduce((a,l)=>a+l.out,0))}</div></div></div>
-  <div class="box wide"><h2>Loan register</h2><p class="sub">Loans are recorded in the weekly Meeting sheet (Loan taken) and repaid there too (Loan repayment). Repayments clear the oldest loan first.</p>${L.length?`<table><tr><th>ID</th><th>Name</th><th>Date</th><th>Loan</th><th>Rate</th><th>Interest</th><th>Total due</th><th>Repaid</th><th>Outstanding</th><th>Due</th><th>Status</th></tr>${L.map(l=>`<tr><td>${mOf(l.mid).memberNo}</td><td>${esc(mOf(l.mid).name)}</td><td>${l.date}</td><td>${money(l.amount)}</td><td>${l.rate}%</td><td>${money(l.interest)}</td><td>${money(l.due)}</td><td>${money(l.repaid)}</td><td>${money(l.out)}</td><td>${l.dueDate}</td><td style="color:${l.status==="Overdue"?"var(--red)":l.status==="Cleared"?"var(--leaf)":"inherit"}">${l.status}</td></tr>`).join("")}</table>`:`<p class="sub">No loans yet.</p>`}</div>`);
-};
-
-/* ---------- SUMMARY ---------- */
-V.summary=()=>{
-  const L=loans(),rows=mem().map(m=>{const es=S.entries.filter(e=>e.memberId===m.id),att=es.filter(e=>e.attendance);
-    return {m,sv:sumE(es,"savings"),ret:sumE(es,"retention"),sf:sumE(es,"socialFund"),fi:es.reduce((a,e)=>a+fines(e),0),out:L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0),ap:att.length?Math.round(att.filter(e=>e.attendance!=="Absent").length/att.length*100):null}});
-  const bk=book(),T=k=>sumE(S.entries,k),tot=T("savings"),ip=L.reduce((a,l)=>a+Math.max(0,l.repaid-l.amount),0),fi=S.entries.reduce((a,e)=>a+fines(e),0);
-  const card=(l,v)=>`<div><div class="sub">${l}</div><div class="big">${money(v)}</div></div>`;
-  body(`<div class="box stat">${card("Savings",tot)}${card("Social fund",T("socialFund"))}${card("Retention",T("retention"))}${card("Registration",T("registration"))}${card("Loan form fees",T("loanFormFee"))}${card("Fines",fi)}${card("Expenses",S.expenses.reduce((a,x)=>a+N(x.amount),0))}${card("Money in the box",bk.length?bk[bk.length-1].close:N(cfg().openingBalance))}${card("Loans outstanding",L.reduce((a,l)=>a+l.out,0))}${card("Interest earned",ip)}</div>
-  <div class="box wide"><h2>Member totals and share-out</h2><p class="sub">Share-out = savings plus a share of interest earned, in proportion to each member's savings. Social fund, retention, registration and fines are not shared out.</p>
-  <table><tr><th>ID</th><th>Name</th><th>Savings</th><th>Retention</th><th>Social</th><th>Fines</th><th>Loan owed</th><th>Attend.</th><th>Share-out</th></tr>${rows.map(r=>`<tr><td>${r.m.memberNo}</td><td>${esc(r.m.name)}</td><td>${money(r.sv)}</td><td>${money(r.ret)}</td><td>${money(r.sf)}</td><td>${money(r.fi)}</td><td>${money(r.out)}</td><td>${r.ap===null?"-":r.ap+"%"}</td><td><b>${money(tot?r.sv/tot*(tot+ip):0)}</b></td></tr>`).join("")}</table></div>
-  <div class="box wide"><h2>Cash book (every meeting)</h2><table><tr><th>Wk</th><th>Date</th><th>Savings</th><th>Social</th><th>Fines</th><th>Loan fees</th><th>Repaid</th><th>Reg+Ret</th><th>Money in</th><th>Loans out</th><th>Expenses</th><th>In the box</th></tr>${[...bk].reverse().map(r=>`<tr><td>${wk(r.d)}</td><td>${r.d}</td><td>${money(r.sav)}</td><td>${money(r.sf)}</td><td>${money(r.fin)}</td><td>${money(r.fee)}</td><td>${money(r.rep)}</td><td>${money(r.reg+r.ret)}</td><td>${money(r.in)}</td><td>${money(r.loan)}</td><td>${money(r.exp)}</td><td><b>${money(r.close)}</b></td></tr>`).join("")||"<tr><td>No meetings yet</td></tr>"}</table></div>`);
-};
-
-/* ---------- TOOLS: calculators, settings, import ---------- */
-V.tools=()=>{
-  const c=cfg(),notes=[50000,20000,10000,5000,2000,1000,500,200,100],SK=[["interestRate","Loan interest (%)"],["loanWeeks","Loan period (weeks)"],["registrationFee","Registration fee"],["retentionPerWeek","Retention per week"],["absentFine","Absent fine"],["lateFine","Late fine"],["noiseFine","Noise fine"],["loanFormFee","Loan form fee"],["openingBalance","Opening balance in the box"]];
-  body(`<div class="box"><h2>Calculator</h2><input id="ex" placeholder="e.g. 20000*12+5000" inputmode="text" aria-label="Expression"><div class="big" id="exr">0</div></div>
-  <div class="box"><h2>Loan calculator</h2>${inp("lc_a","Loan amount","number")}${inp("lc_r","Interest (%)","number",c.interestRate)}${inp("lc_w","Weeks to repay","number",c.loanWeeks)}<p id="lcr" class="sub"></p></div>
-  <div class="box"><h2>Cash counter</h2>${notes.map(n=>`<div class="row"><label for="n${n}" style="margin:0">${money(n)} × </label><input id="n${n}" data-n="${n}" type="number" inputmode="numeric" min="0" style="width:90px"></div>`).join("")}<div class="big" id="cct" style="margin-top:8px">0</div></div>
-  <div class="box"><h2>Group settings</h2>${SK.map(([k,l])=>inp("s_"+k,l,"number",c[k])).join("")}${inp("s_savChips","Quick savings amounts (comma separated)","text",c.savChips)}${inp("s_sfChips","Quick social fund amounts (comma separated)","text",c.sfChips)}<button class="pri" id="ss">Save settings</button></div>
-  <div class="box"><h2>Import from Excel (CSV)</h2><p class="sub">Choose members.csv first, then history.csv. Importing again updates records and does not duplicate them.</p><input id="imp" type="file" accept=".csv" aria-label="CSV file"></div>`);
-  $("#ex").oninput=e=>{const x=e.target.value;try{$("#exr").textContent=/^[\d+\-*/().\s]+$/.test(x)?(+Function('"use strict";return ('+x+')')()).toLocaleString():"0"}catch{$("#exr").textContent="…"}};
-  const lc=()=>{const a=N($("#lc_a").value),r=N($("#lc_r").value),w=N($("#lc_w").value),i=a*r/100;$("#lcr").innerHTML=a?`Interest <b>${money(i)}</b><br>Total to repay <b>${money(a+i)}</b>${w?`<br>Per week <b>${money((a+i)/w)}</b><br>Due by ${fmt(AD(iso(new Date()),7*w))}`:""}`:"Enter an amount."};
-  ["lc_a","lc_r","lc_w"].forEach(i=>$("#"+i).oninput=lc);lc();
-  document.querySelectorAll("[data-n]").forEach(i=>i.oninput=()=>$("#cct").textContent=money([...document.querySelectorAll("[data-n]")].reduce((a,x)=>a+N(x.value)*x.dataset.n,0)));
-  $("#ss").onclick=async()=>{const s={};SK.forEach(([k])=>s[k]=N($("#s_"+k).value));s.savChips=$("#s_savChips").value.trim();s.sfChips=$("#s_sfChips").value.trim();await updateDoc(doc(db,"groups",S.gid),{settings:s});toast("Settings saved")};
-  $("#imp").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;
+async function doImport(ev){const f=ev.target.files[0];if(!f)return;
     const rows=(await f.text()).trim().split(/\r?\n/).map(l=>l.split(",").map(x=>x.trim())),h=rows.shift(),ix=n=>h.indexOf(n),items=[];
     if(h.includes("Full Name"))rows.forEach(r=>{const no=+r[0];if(no)items.push([gdoc("members","m"+no),{memberNo:no,name:r[1],gender:r[2],village:r[3],contact:r[4],joinDate:r[5],status:r[6]||"Active"}])});
     else if(h.includes("Attendance")){const ds=new Set();rows.forEach(r=>{const d=r[ix("Date")],mid="m"+r[ix("Member ID")];if(!d)return;ds.add(d);const o={date:d,memberId:mid,attendance:r[ix("Attendance")]||""};
       KEYS.forEach(k=>o[k]=N(r[ix({registration:"Registration",retention:"Retention",savings:"Savings",socialFund:"Social Fund",loanTaken:"Loan Taken",loanRepayment:"Loan Repayment",loanFormFee:"Loan Form Fee",absentFine:"Absent Fine",lateFine:"Late Fine",noiseFine:"Noise Fine",otherFines:"Other Fines"}[k])]));
       o.totalFines=fines(o);o.totalPaid=paid(o);items.push([gdoc("entries",d+"_"+mid),o])});ds.forEach(d=>items.push([gdoc("meetings",d),{date:d}]))}
     else return toast("Unrecognised file. Use members.csv or history.csv");
-    try{await bulk(items);toast("Imported "+items.length+" records")}catch(e){toast("Import failed: "+e.code)}ev.target.value=""};
+    try{await bulk(items);toast("Imported "+items.length+" records")}catch(e){toast("Import failed: "+e.code)}ev.target.value=""}
+let cx="";
+function ev(s){s=s.replace(/[+\-*/.]+$/,'').replace(/(^|[^\d.])0+(?=\d)/g,'$1');if(!s||!/^[0-9+\-*/. ]+$/.test(s))return null;try{const v=Function('return '+s)();return isFinite(v)?Math.round(v*1e8)/1e8:null}catch(e){return null}}
+function calc(){cx='';const K=['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','00','='];
+modal('<h2>Calculator</h2><div class="stat wide" style="text-align:right"><small id="ce" style="min-height:1.3em;display:block;overflow-wrap:anywhere"></small><span class="num" id="cr" style="font-size:30px">0</span></div><div class="kp">'+K.map(k=>'<button class="'+('÷×−+='.includes(k)?'op':k=='C'||k=='⌫'?'fn':'')+'" onclick="kp(\''+k+'\')">'+k+'</button>').join('')+'</div><button class="btn" data-act="loancalc">Loan calculator</button><button class="btn" data-act="cashcount">Cash counter</button><button class="btn" onclick="modal()">Close</button>')}
+function kp(k){const op=/[+\-*/]$/;
+if(k=='C')cx='';else if(k=='⌫')cx=cx.slice(0,-1);
+else if(k=='=')cx=String(ev(cx)??cx);
+else if(k=='%')cx=cx.replace(/(\d+\.?\d*)$/,m=>String(+m/100));
+else{const c={'÷':'/','×':'*','−':'-'}[k]||k;if('+-*/'.includes(c)){if(!cx&&c!='-')return;if(op.test(cx))cx=cx.slice(0,-1)}if(c=='.'&&/\.\d*$/.test(cx))return;cx+=c}
+const r=ev(cx);$('#ce').textContent=cx.replace(/\//g,'÷').replace(/\*/g,'×').replace(/-/g,'−');$('#cr').textContent=r==null?'0':r.toLocaleString('en-US',{maximumFractionDigits:8})}
+
+/* ---------- HOME ---------- */
+function memberRows(){
+  const L=loans(),tot=sumE(S.entries,"savings"),ip=L.reduce((a,l)=>a+Math.max(0,l.repaid-l.amount),0);
+  return mem().map(m=>{const es=S.entries.filter(e=>e.memberId===m.id),att=es.filter(e=>e.attendance),sv=sumE(es,"savings");
+    return {m,es,sv,ret:sumE(es,"retention"),sf:sumE(es,"socialFund"),fi:es.reduce((a,e)=>a+fines(e),0),out:L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0),ap:att.length?Math.round(att.filter(e=>e.attendance!=="Absent").length/att.length*100):null,pay:tot?sv/tot*(tot+ip):0}});
+}
+V.home=()=>{
+  const ds=dates(),bk=book(),L=loans(),lb=bk[bk.length-1],box=lb?lb.close:N(cfg().openingBalance),T=k=>sumE(S.entries,k);
+  const exp=S.expenses.reduce((a,x)=>a+N(x.amount),0),out=L.reduce((a,l)=>a+l.out,0),ip=L.reduce((a,l)=>a+Math.max(0,l.repaid-l.amount),0);
+  const t=iso(new Date()),dw=new Date().getDay(),nx=new Date();nx.setDate(nx.getDate()+(7-dw)%7);
+  let tg,lab;if(ds.includes(t)){tg=t;lab="Open today's meeting"}else if(dw===0||dw===6){tg=t;lab="Start today's meeting"}else{tg=iso(nx);lab="Start meeting: "+fmt(tg)}
+  const l8=ds.slice(-8),v=l8.map(d=>cash(d).sav),mx=Math.max(...v,1),over=L.filter(l=>l.status==="Overdue"),ab=ds.length?S.entries.filter(e=>e.date===ds[ds.length-1]&&e.attendance==="Absent"):[];
+  body(`<div class="cards">${card("Money in the box","UGX "+money(box),{w:1,g:"money:cb"})}${card("Total savings",money(T("savings")),{g:"rep:share"})}${card("Social fund",money(T("socialFund")),{g:"money:sf"})}${card("Loans outstanding",money(out),{g:"money:loans"})}${card("Interest earned",money(ip),{g:"money:loans"})}${card("Fines",money(S.entries.reduce((a,e)=>a+fines(e),0)),{g:"money:fines"})}${card("Expenses",money(exp),{g:"money:exp"})}${card("Members",mem().filter(m=>m.status!=="Inactive").length,{g:"members"})}${card("Last meeting savings",money(lb?lb.sav:0),{g:"meeting:cash"})}</div>
+  <button class="btn big" data-act="open" data-arg="${tg}">${lab}</button>
+  ${l8.length?`<h3>Savings, last ${l8.length} meetings</h3><div class="bars">${v.map(x=>`<div style="height:${x/mx*100}%"></div>`).join("")}</div><div class="lab">${l8.map(d=>`<small>${d.slice(8)}/${d.slice(5,7)}</small>`).join("")}</div>`:""}
+  <h3>Loans overdue (${over.length})</h3>${over.map(l=>item(esc(mOf(l.mid).name),"due "+l.dueDate,money(l.out),["go","money:loans"],"low")).join("")||empty("No overdue loans")}
+  ${ds.length?`<h3>Absent at the last meeting (${ab.length})</h3>${ab.map(e=>item(`#${mOf(e.memberId).memberNo} ${esc(mOf(e.memberId).name)}`,fines(e)?"fine "+money(fines(e)):"",""),).join("")||empty("Nobody was absent")}`:""}`);
 };
+/* ---------- MEMBERS ---------- */
+V.members=()=>{
+  const R=memberRows(),act=R.filter(r=>r.m.status!=="Inactive");
+  body(`<div class="cards">${card("Members",act.length+" active / "+R.length)}${card("Total savings",money(sumA(R,r=>r.sv)))}${card("Social fund",money(sumA(R,r=>r.sf)))}${card("Loans owed",money(sumA(R,r=>r.out)),{c:"low"})}</div>
+  <button class="btn big" data-act="addm" style="margin:0 0 10px">+ Add member</button><input id="mq" placeholder="Search name or ID" value="${esc(S.mq)}" aria-label="Search member"><div id="mlist"></div>`);
+  const paint=()=>{const q=S.mq.toLowerCase();$("#mlist").innerHTML=R.filter(r=>!q||r.m.name.toLowerCase().includes(q)||String(r.m.memberNo)===q).map(r=>item(`#${r.m.memberNo} ${esc(r.m.name)}`,`${esc(r.m.village||"")}${r.m.contact?" · "+esc(r.m.contact):""}${r.m.status==="Inactive"?" · Inactive":""}`,money(r.sv)+(r.out?`<br><small class="low">owes ${money(r.out)}</small>`:""),["mem",r.m.id])).join("")||empty(R.length?"No members found":"No members yet. Add one, or import your list in Setup.")};
+  paint();$("#mq").oninput=e=>{S.mq=e.target.value;paint()};
+};
+function memberForm(id){
+  const m=id?S.members.find(x=>x.id===id):null,next=mem().reduce((a,x)=>Math.max(a,x.memberNo),0)+1;
+  form(m?"Edit member #"+m.memberNo:"Add member (ID "+next+")",[["name","Full name","text"],["gender","Gender","select",["M","F"]],["village","Village","text"],["contact","Contact","tel"],["joinDate","Join date","date"]],m||{joinDate:iso(new Date()),gender:"M"},r=>{
+    if(!r.name){toast("Enter a name");return false}
+    if(m)updateDoc(gdoc("members",m.id),r);else setDoc(gdoc("members","m"+next),{...r,memberNo:next,status:"Active"});toast("Saved")});
+}
+function memberView(id){
+  const R=memberRows().find(r=>r.m.id===id),m=R.m,es=[...R.es].sort((a,b)=>a.date<b.date?1:-1);
+  modal(`<h2>#${m.memberNo} ${esc(m.name)}</h2><small>${esc(m.village||"")} · ${esc(m.contact||"")} · joined ${esc(m.joinDate||"")}${m.status==="Inactive"?" · Inactive":""}</small>
+  <div class="cards" style="margin-top:8px">${card("Savings",money(R.sv))}${card("Social fund",money(R.sf))}${card("Fines",money(R.fi))}${card("Loan owed",money(R.out),{c:R.out?"low":""})}${card("Attendance",R.ap===null?"-":R.ap+"%")}${card("Share-out now",money(R.pay),{c:"ok"})}</div>
+  <h3>Records</h3>${es.slice(0,40).map(e=>item(fmt(e.date),`${e.attendance||"-"}${fines(e)?" · fine "+money(fines(e)):""}`,money(e.savings||0)+`<br><small>SF ${money(e.socialFund||0)}</small>`)).join("")||empty("No records yet")}
+  <button class="btn" id="me">Edit details</button><button class="btn" id="ms">${m.status==="Inactive"?"Make active":"Make inactive"}</button><button class="btn del" id="mx">Delete member</button><button class="btn" id="mc">Close</button>`);
+  $("#mc").onclick=()=>{modal();refresh(true)};
+  $("#me").onclick=()=>memberForm(id);
+  $("#ms").onclick=()=>{updateDoc(gdoc("members",id),{status:m.status==="Inactive"?"Active":"Inactive"});modal();refresh(true)};
+  $("#mx").onclick=()=>{if(R.es.length)return toast("This member has records. Make them inactive instead");if(confirm("Delete this member?")){deleteDoc(gdoc("members",id));modal();refresh(true)}};
+}
+/* ---------- MONEY ---------- */
+function repay(mid){
+  if(!dates().includes(S.date))return toast("Open a meeting first");
+  const a=N(prompt("Repayment from "+mOf(mid).name+" (recorded in the meeting of "+fmt(S.date)+")"));if(!(a>0))return;
+  const id=S.date+"_"+mid,{id:_x,...e}=S.entries.find(x=>x.id===id)||{date:S.date,memberId:mid};
+  e.loanRepayment=N(e.loanRepayment)+a;e.totalFines=fines(e);e.totalPaid=paid(e);setDoc(gdoc("entries",id),e);toast("Repayment recorded");
+}
+function expForm(id){
+  const x=id?S.expenses.find(e=>e.id===id):null,ds=[...dates()].reverse();
+  if(!ds.length)return toast("Start a meeting first");
+  form(x?"Edit expense":"Add expense",[["date","Meeting date","select",ds],["item","What was bought","text"],["amount","Amount","number"]],x||{date:ds.includes(S.date)?S.date:ds[0]},r=>{
+    if(!r.item||!(r.amount>0)){toast("Enter the item and amount");return false}
+    if(x)updateDoc(gdoc("expenses",x.id),r);else addDoc(gcol("expenses"),{...r,createdAt:serverTimestamp()});toast("Saved")},x?()=>deleteDoc(gdoc("expenses",x.id)):null);
+}
+const cbTable=rows=>`<div class="tw"><table><tr><th>Wk</th><th>Date</th><th>Savings</th><th>Social</th><th>Fines</th><th>Loan fees</th><th>Repaid</th><th>Reg+Ret</th><th>Money in</th><th>Loans out</th><th>Expenses</th><th>In the box</th></tr>${[...rows].reverse().map(r=>`<tr><td>${wk(r.d)}</td><td>${r.d}</td><td>${money(r.sav)}</td><td>${money(r.sf)}</td><td>${money(r.fin)}</td><td>${money(r.fee)}</td><td>${money(r.rep)}</td><td>${money(r.reg+r.ret)}</td><td>${money(r.in)}</td><td>${money(r.loan)}</td><td>${money(r.exp)}</td><td><b>${money(r.close)}</b></td></tr>`).join("")||"<tr><td>No meetings yet</td></tr>"}</table></div>`;
+V.money=()=>{
+  const s=S.sub,sg=seg([["loans","Loans"],["exp","Expenses"],["cb","Cash book"],["sf","Social fund"],["fines","Fines"]],s,"sub");
+  if(s==="loans"){const L=loans();return body(sg+`<div class="cards">${card("Loaned out",money(sumA(L,l=>l.amount)))}${card("Interest due",money(sumA(L,l=>l.interest)))}${card("Repaid",money(sumA(L,l=>l.repaid)))}${card("Outstanding",money(sumA(L,l=>l.out)),{c:"low"})}</div><small>Tap an unpaid loan to record a repayment in the selected meeting. Loans are given from the Meeting tab (⋯ on a member).</small>`+([...L].reverse().map(l=>item(`#${mOf(l.mid).memberNo} ${esc(mOf(l.mid).name)}`,`${l.date} · ${money(l.amount)} @ ${l.rate}% · due ${l.dueDate}`,l.out>0?money(l.out)+`<br><small>${l.status}</small>`:"Cleared",l.out>0?["rep",l.mid]:null,l.status==="Overdue"?"low":l.status==="Cleared"?"ok":"")).join("")||empty("No loans yet")))}
+  if(s==="exp"){const X=[...S.expenses].sort((a,b)=>a.date<b.date?1:-1);return body(sg+`<div class="cards">${card("Total expenses","UGX "+money(sumA(X,x=>N(x.amount))),{w:1})}</div><button class="btn big" data-act="addx" style="margin:0 0 10px">+ Add expense</button>`+(X.map(x=>item(esc(x.item),fmt(x.date),money(x.amount),["editx",x.id])).join("")||empty("No expenses yet")))}
+  if(s==="cb"){const bk=book(),l=bk[bk.length-1];return body(sg+`<div class="cards">${card("Money in the box now","UGX "+money(l?l.close:N(cfg().openingBalance)),{w:1})}${card("Opening balance",money(cfg().openingBalance))}${card("Meetings",bk.length)}</div>`+cbTable(bk))}
+  const k=s==="sf"?"sf":"fi",R=memberRows().filter(r=>r[k]>0).sort((a,b)=>b[k]-a[k]);
+  body(sg+`<div class="cards">${card(s==="sf"?"Social fund collected":"Fines collected","UGX "+money(sumA(R,r=>r[k])),{w:1})}</div>`+(R.map(r=>item(`#${r.m.memberNo} ${esc(r.m.name)}`,"",money(r[k]),["mem",r.m.id])).join("")||empty("Nothing collected yet")));
+};
+/* ---------- REPORTS ---------- */
+V.rep=()=>{
+  const s=S.rsub,sg=seg([["meet","Meeting"],["month","Monthly"],["share","Share-out"]],s,"rsub"),ds=dates();
+  if(s==="share"){const R=memberRows(),tot=sumE(S.entries,"savings"),L=loans(),ip=sumA(L,l=>Math.max(0,l.repaid-l.amount));
+    return body(sg+`<div class="cards">${card("Share-out pool","UGX "+money(tot+ip),{w:1})}${card("Savings",money(tot))}${card("Interest earned",money(ip))}</div><small>Each member gets their savings back plus a share of the interest, in proportion to what they saved. Social fund, retention, registration and fines are not shared out.</small><div class="tw" style="margin-top:8px"><table><tr><th>ID</th><th>Name</th><th>Savings</th><th>Retention</th><th>Social</th><th>Fines</th><th>Loan owed</th><th>Attend.</th><th>Share-out</th></tr>${R.map(r=>`<tr><td>${r.m.memberNo}</td><td>${esc(r.m.name)}</td><td>${money(r.sv)}</td><td>${money(r.ret)}</td><td>${money(r.sf)}</td><td>${money(r.fi)}</td><td>${money(r.out)}</td><td>${r.ap===null?"-":r.ap+"%"}</td><td><b>${money(r.pay)}</b></td></tr>`).join("")}</table></div><button class="btn" data-act="csv" data-arg="share">Download as spreadsheet (CSV)</button>`)}
+  if(s==="month"){const m=S.mon,md=ds.filter(d=>d.startsWith(m)),C=md.map(cash),bk=book().filter(r=>r.d.startsWith(m)),T=k=>sumA(C,r=>r[k]);
+    body(sg+`<label for="mn">Report month</label><input id="mn" type="month" value="${m}"><div class="cards">${card("Money in","UGX "+money(T("in")),{w:1})}${card("Savings",money(T("sav")))}${card("Social fund",money(T("sf")))}${card("Fines",money(T("fin")))}${card("Loan form fees",money(T("fee")))}${card("Loan repayments",money(T("rep")))}${card("Loans given",money(T("loan")))}${card("Expenses",money(T("exp")))}${card("Left this month",money(T("net")),{c:T("net")<0?"low":"ok"})}${card("Meetings",md.length)}</div>`+cbTable(bk));
+    $("#mn").onchange=e=>{S.mon=e.target.value||S.mon;V.rep()};return}
+  if(!ds.length)return body(sg+noMeet);
+  if(!ds.includes(S.date))S.date=ds[ds.length-1];
+  const d=S.date,r=cash(d),es=S.entries.filter(e=>e.date===d),c=x=>es.filter(e=>e.attendance===x).length;
+  body(sg+`<div class="box">${picker(ds,d)}</div><div class="cards">${card("Money in","UGX "+money(r.in),{w:1})}${card("Savings",money(r.sav))}${card("Social fund",money(r.sf))}${card("Fines",money(r.fin))}${card("Loans given",money(r.loan))}${card("Expenses",money(r.exp))}${card("Present",c("Present"))}${card("Late",c("Late"))}${card("Absent",c("Absent"))}</div><div class="tw"><table><tr><th>ID</th><th>Name</th><th>Attend.</th><th>Savings</th><th>Social</th><th>Fines</th><th>Paid</th></tr>${[...es].sort((a,b)=>mOf(a.memberId).memberNo-mOf(b.memberId).memberNo).map(e=>`<tr><td>${mOf(e.memberId).memberNo}</td><td>${esc(mOf(e.memberId).name)}</td><td>${esc(e.attendance||"-")}</td><td>${money(e.savings)}</td><td>${money(e.socialFund)}</td><td>${money(fines(e))}</td><td><b>${money(paid(e))}</b></td></tr>`).join("")}</table></div><button class="btn" data-act="csv" data-arg="meet">Download as spreadsheet (CSV)</button>`);
+  $("#mpk").onchange=e=>{S.date=e.target.value;V.rep()};
+};
+function exportCsv(k){
+  if(k==="share")return download("share-out.csv",csvOut([["ID","Name","Savings","Retention","Social fund","Fines","Loan owed","Attendance %","Share-out"],...memberRows().map(r=>[r.m.memberNo,r.m.name,r.sv,r.ret,r.sf,r.fi,r.out,r.ap??"",Math.round(r.pay)])]),"text/csv");
+  const d=S.date;download("meeting-"+d+".csv",csvOut([["ID","Name","Attendance","Registration","Retention","Savings","Social fund","Loan form fee","Loan taken","Loan repayment","Fines","Total paid"],...S.entries.filter(e=>e.date===d).sort((a,b)=>mOf(a.memberId).memberNo-mOf(b.memberId).memberNo).map(e=>[mOf(e.memberId).memberNo,mOf(e.memberId).name,e.attendance||"",N(e.registration),N(e.retention),N(e.savings),N(e.socialFund),N(e.loanFormFee),N(e.loanTaken),N(e.loanRepayment),fines(e),paid(e)])]),"text/csv");
+}
+/* ---------- SETUP + HELP ---------- */
+V.set=()=>{
+  const c=cfg(),SK=[["interestRate","Loan interest (%)"],["loanWeeks","Loan period (weeks)"],["registrationFee","Registration fee"],["retentionPerWeek","Retention per week"],["absentFine","Absent fine"],["lateFine","Late fine"],["noiseFine","Noise fine"],["loanFormFee","Loan form fee"],["openingBalance","Opening balance in the box"]];
+  body(`<button class="btn big" data-act="go" data-arg="help" style="margin:0 0 6px">📖 How to use this app</button><h2>Group details</h2>${inp("gname","Group name","text",G().name)}<h3>Meeting money</h3>${SK.map(([k,l])=>inp("s_"+k,l,"number",c[k])).join("")}<h3>Quick tap amounts (comma separated)</h3>${inp("s_savChips","Savings amounts","text",c.savChips)}${inp("s_sfChips","Social fund amounts","text",c.sfChips)}<button class="btn big" id="ss">Save settings</button>
+  <h3>Import from Excel (CSV)</h3><small>Choose members.csv first, then history.csv. Importing again updates records and does not duplicate them.</small><input id="imp" type="file" accept=".csv" aria-label="CSV file" style="margin-top:6px">
+  <h3>Backup</h3><small>Download a copy of all records now and then. Do not put backup files on GitHub.</small><button class="btn" id="bk">Download backup file</button><h3>Account</h3><button class="btn del" id="out">Sign out</button>`);
+  $("#ss").onclick=()=>{const s={};SK.forEach(([k])=>s[k]=N($("#s_"+k).value));s.savChips=$("#s_savChips").value.trim();s.sfChips=$("#s_sfChips").value.trim();const name=$("#gname").value.trim()||G().name;updateDoc(doc(db,"groups",S.gid),{name,settings:s});toast("Settings saved")};
+  $("#imp").onchange=doImport;
+  $("#bk").onclick=()=>download("vsla-backup-"+iso(new Date())+".json",JSON.stringify({group:G(),members:S.members,meetings:S.meetings,entries:S.entries,expenses:S.expenses}),"application/json");
+  $("#out").onclick=()=>signOut(auth);
+};
+V.help=()=>{
+  const H=[["Run a Sunday (or Saturday) meeting","<ol><li>Home, tap the big button, or use Meeting &gt; Calendar and tap the date.</li><li>On Roll call, tap <b>Change</b> and choose an action: Present, Late, Absent, a savings amount, a social fund amount or a fine.</li><li>Tap each member's name to apply it. Tap again to undo.</li><li>Use <b>⋯</b> on a member for loans, loan form fees and other details.</li></ol>"],["Money in the box","<p>Meeting &gt; Cash shows money in, loans given, expenses and what is left in the box. Add expenses such as printing loan forms, pens and rulers there. Money &gt; Cash book lists every meeting.</p>"],["Loans","<p>Give a loan with ⋯ on the member (Loan taken). Money &gt; Loans shows what is owed. Tap an unpaid loan to record a repayment.</p>"],["Saturday meetings","<p>On Roll call, <b>Move to Saturday</b> shifts the meeting a day earlier with all its records. <b>Change date</b> picks any date.</p>"],["Reports and share-out","<p>Reports has a report for one meeting, a monthly report and the end-of-cycle share-out. Each can be downloaded as a spreadsheet.</p>"],["Install on your phone","<p>In Chrome, open the menu and tap Install app or Add to Home screen. The calculator button (🧮) also has a loan calculator and a cash counter.</p>"]];
+  body(`<button class="btn" data-act="go" data-arg="set" style="margin:0 0 8px">← Back to Setup</button><h2>How to use this app</h2>`+H.map(([t,h])=>`<details><summary>${t}</summary>${h}</details>`).join(""));
+};
+function loanCalc(){
+  const c=cfg();modal(`<h2>Loan calculator</h2>${inp("lc_a","Loan amount","number")}${inp("lc_r","Interest (%)","number",c.interestRate)}${inp("lc_w","Weeks to repay","number",c.loanWeeks)}<div class="stat wide" id="lcr"></div><button class="btn" id="lx">Close</button>`);
+  const f=()=>{const a=N($("#lc_a").value),r=N($("#lc_r").value),w=N($("#lc_w").value),i=a*r/100;$("#lcr").innerHTML=a?`<small>Interest ${money(i)} · per week ${w?money((a+i)/w):"-"}</small><span class="num">UGX ${money(a+i)}</span>`:"<small>Enter an amount</small>"};
+  ["lc_a","lc_r","lc_w"].forEach(i=>$("#"+i).oninput=f);f();$("#lx").onclick=()=>modal();
+}
+function cashCount(){
+  const notes=[50000,20000,10000,5000,2000,1000,500,200,100];
+  modal(`<h2>Cash counter</h2>${notes.map(n=>`<div class="row"><label style="margin:0">${money(n)} ×</label><input data-n="${n}" type="number" inputmode="numeric" min="0" style="width:90px;margin:0" aria-label="${money(n)} notes"></div>`).join("")}<div class="stat wide" style="margin-top:8px"><small>Total cash</small><span class="num" id="cct">0</span></div><button class="btn" id="cx2">Close</button>`);
+  document.querySelectorAll("#md [data-n]").forEach(i=>i.oninput=()=>$("#cct").textContent=money(sumA([...document.querySelectorAll("#md [data-n]")],x=>N(x.value)*x.dataset.n)));
+  $("#cx2").onclick=()=>modal();
+}
+Object.assign(window,{modal,kp,calc});
+/* ---------- INSTALL + OFFLINE ---------- */
+let dip=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e;$("#installApp").style.display="block"});
+$("#installApp").onclick=async()=>{if(dip){dip.prompt();await dip.userChoice;dip=null;$("#installApp").style.display="none"}};
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
 </body>
 </html>
