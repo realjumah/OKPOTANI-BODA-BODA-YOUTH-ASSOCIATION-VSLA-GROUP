@@ -58,11 +58,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div id="msg" role="status"></div>
 
 <script type="module">
-import {firebaseConfig} from "./firebase-config.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,writeBatch,onSnapshot,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
+/* Your Firebase project settings */
 const firebaseConfig = {
   apiKey: "AIzaSyAa46jt-G7Ma4aH8MHxvPnLf13L2yvgFpM",
   authDomain: "vsla-app-d70dd.firebaseapp.com",
@@ -71,6 +72,9 @@ const firebaseConfig = {
   messagingSenderId: "797658721016",
   appId: "1:797658721016:web:a05a0d765d218d543da90d"
 };
+
+const app=initializeApp(firebaseConfig), auth=getAuth(app);
+const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 
 const S={user:null,groups:[],gid:null,members:[],meetings:[],entries:[],expenses:[],tab:"meeting",date:null,cal:new Date(),modal:false,brush:{g:"Attendance",k:"attendance",v:"Present",l:"Attendance: Present"},q:"",hide:false,pick:false};
 let unsubs=[],gUn=[],watching=null;
