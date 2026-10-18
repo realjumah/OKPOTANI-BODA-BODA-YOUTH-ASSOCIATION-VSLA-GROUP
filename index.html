@@ -441,14 +441,16 @@ function memberRows(){const F=fund();
   return mem().map(m=>{const es=S.entries.filter(e=>e.memberId===m.id),att=es.filter(e=>e.attendance),sv=sumA(es,cashSav),stars=sv/F.star;
     return {m,es,sv,stars,ret:sumE(es,"retention"),sf:sumA(es,cashSf),fi:es.reduce((a,e)=>a+fines(e),0),out:F.L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0),ap:att.length?Math.round(att.filter(e=>e.attendance!=="Absent").length/att.length*100):null,pay:stars*F.per}});
 }
+const parseDay=t=>{t=String(t||"").trim();let m=t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/),y,mo,d;if(m){y=+m[1];mo=+m[2];d=+m[3]}else if(m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/)){d=+m[1];mo=+m[2];y=+m[3]}else return null;const dt=new Date(Date.UTC(y,mo-1,d));if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d)return null;return y+"-"+pad(mo)+"-"+pad(d)};
 async function newCycle(){const F=fund();if(F.L.some(l=>l.out>0)&&!confirm("Some loans are not cleared. Continue anyway?"))return;
-  if(!confirm("A backup file downloads first. Then a new cycle starts: totals, loans and the box restart from the date you choose. Old records stay in the database."))return;
+  if(!confirm("A backup file downloads first. Then a new cycle starts: totals, loans and the box restart from the date you choose (a past date is allowed). Old records stay in the database."))return;
   download("vsla-backup-"+iso(new Date())+".json",JSON.stringify({group:G(),members:R.members,meetings:R.meetings,entries:R.entries,expenses:R.expenses}),"application/json");
-  const raw=prompt("Start date of the new cycle. You can use a past date, e.g. 24/05/2026",iso(new Date()));if(!raw)return;
-  const pd=(t=>{t=t.trim();let m=t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/),y,mo,d;if(m){y=+m[1];mo=+m[2];d=+m[3]}else if(m=t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/)){d=+m[1];mo=+m[2];y=+m[3]}else return null;const dt=new Date(Date.UTC(y,mo-1,d));if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d)return null;return y+"-"+String(mo).padStart(2,"0")+"-"+String(d).padStart(2,"0")})(raw);
-  if(!pd)return toast("Use a real date, e.g. 24/05/2026");const cs=pd;
-  const ob=N(prompt("Opening box balance (the social fund carried forward)",(book().slice(-1)[0]||{}).socClose||0));
-  await updateDoc(doc(db,"groups",S.gid),{"settings.cycleStart":cs,"settings.openingBalance":ob,"settings.openingSocial":ob});S.date=null;toast("New cycle started");shell()}
+  const ob0=(book().slice(-1)[0]||{}).socClose||0;
+  modal(`<h2>Start a new cycle</h2><label for="nc_d">Start date (any date, past dates allowed)</label><input id="nc_d" type="date" value="${iso(new Date())}"><label for="nc_b">Opening box balance (the social fund carried forward)</label><input id="nc_b" type="number" inputmode="numeric" min="0" value="${N(ob0)}"><button class="btn big" id="nc_go">Start new cycle</button><button class="btn" id="nc_x">Cancel</button>`);
+  $("#nc_x").onclick=()=>modal();
+  $("#nc_go").onclick=async()=>{const cs=parseDay($("#nc_d").value);if(!cs)return toast("Choose a valid start date, e.g. 24/05/2026");const ob=N($("#nc_b").value);
+    try{await updateDoc(doc(db,"groups",S.gid),{"settings.cycleStart":cs,"settings.openingBalance":ob,"settings.openingSocial":ob})}catch(e){return toast("Could not save: "+(e&&e.message||e))}
+    modal();S.date=null;toast("New cycle started from "+cs);shell()}}
 function logoPick(ev){const fl=ev.target.files[0];if(!fl)return;const im=new Image(),u=URL.createObjectURL(fl);im.onload=()=>{const z=192,cv=document.createElement("canvas");cv.width=cv.height=z;const x=cv.getContext("2d"),q=Math.min(im.width,im.height);x.fillStyle="#fff";x.fillRect(0,0,z,z);x.drawImage(im,(im.width-q)/2,(im.height-q)/2,q,q,0,0,z,z);URL.revokeObjectURL(u);updateDoc(doc(db,"groups",S.gid),{logo:cv.toDataURL("image/jpeg",.85)}).then(()=>{toast("Logo saved");head();V.set()})};im.onerror=()=>toast("Could not read that image");im.src=u}
 V.home=()=>{
   const ds=dates(),bk=book(),L=loans(),lb=bk[bk.length-1],box=lb?lb.close:N(cfg().openingBalance),T=k=>sumE(S.entries,k);
