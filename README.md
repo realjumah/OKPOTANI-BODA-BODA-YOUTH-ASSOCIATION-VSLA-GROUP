@@ -72,3 +72,12 @@ Loans were not imported because the Loan Register has no loan dates. Record them
 
 - Let the chair and members sign in with their own accounts (add a `memberUids` list to the group and update the rules).
 - SMS balance alerts, Mobile Money, and local language labels.
+
+## Rules built in (v2)
+
+- Retention is paid once, on the first meeting of a cycle (Setup > Cycle start date, Retention).
+- Loans: 10% interest for every month started, up to 3 months (30%). Penalty of 5,000 if not cleared after 3 months. All amounts are in Setup.
+- Weekly savings must be an even amount from 2,000 to 20,000. Social fund 1,000 to 10,000.
+- Pay-ahead savings: enter total handed in and weeks covered on a member's details. Future weeks show in yellow and apply automatically.
+- Cash book: social fund and loan fund balances, short-box warning, cash count with difference, social fund payouts.
+- Share-out uses stars (savings / star value). Group logo is set in Setup.

@@ -1,5 +1,5 @@
 // Network first, so a new index.html is picked up right away; falls back to the saved copy when offline.
-const CACHE = "vsla-book-v1";
+const CACHE = "vsla-book-v2";
 self.addEventListener("install", e => { self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
