@@ -125,11 +125,12 @@ const wk=d=>dates().indexOf(d)+1;
 const fines=e=>N(e.absentFine)+N(e.lateFine)+N(e.noiseFine)+N(e.meetFine)+N(e.otherFines);
 // Total Paid = cash the member hands in this week. Loan Taken is cash going out, so it is not included.
 const cashSav=e=>N(e.savings)-N(e.prepaid)+N(e.advance); // cash actually received for savings (prepaid weeks bring no cash)
+const cashSf=e=>N(e.socialFund)-N(e.sfPrepaid)+N(e.sfAdvance);
 const evenOK=a=>Number.isInteger(a)&&a%2===0;
 const chkSav=a=>{const c=cfg(),lo=N(c.savMin),hi=N(c.savMax);if(!evenOK(a)||a<lo||a>hi){toast("Weekly savings must be an even amount from "+money(lo)+" to "+money(hi));return false}return true};
 const chkSf=a=>{const c=cfg(),lo=N(c.sfMin),hi=N(c.sfMax);if(!Number.isInteger(a)||a<lo||a>hi){toast("Social fund must be from "+money(lo)+" to "+money(hi));return false}return true};
 const AM=(s,n)=>{const d=P(s),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+n);d.setDate(Math.min(day,new Date(d.getFullYear(),d.getMonth()+1,0).getDate()));return iso(d)};
-const paid=e=>N(e.registration)+N(e.retention)+cashSav(e)+N(e.socialFund)+N(e.loanRepayment)+N(e.loanFormFee)+fines(e);
+const paid=e=>N(e.registration)+N(e.retention)+cashSav(e)+cashSf(e)+N(e.loanRepayment)+N(e.loanFormFee)+fines(e);
 const mOf=id=>S.members.find(m=>m.id===id)||{name:"Unknown",memberNo:"?"};
 const sumE=(es,k)=>es.reduce((a,e)=>a+N(e[k]),0);
 // Everything the app shows is limited to the current saving cycle (cycle start date in Setup). Older records stay in the database.
@@ -218,9 +219,10 @@ function refresh(force){
   const y=$("#main").scrollTop;V[S.tab]();head();$("#main").scrollTop=y;
 }
 async function openMeeting(d){
-  if(!dates().includes(d)){const pre=mem().filter(m=>m.status!=="Inactive").map(m=>[m,pending(m.id)]).filter(([,p])=>p.n>0);setDoc(gdoc("meetings",d),{date:d});const t0=Date.now();while(!dates().includes(d)&&Date.now()-t0<2000)await new Promise(r=>setTimeout(r,40));if(pre.length)await bulk(pre.map(([m,p])=>[gdoc("entries",d+"_"+m.id),{date:d,memberId:m.id,attendance:"",savings:p.amt,prepaid:p.amt,totalFines:0,totalPaid:0}]))}
+  if(!dates().includes(d)){const pre=mem().filter(m=>m.status!=="Inactive").map(m=>[m,pending(m.id),pendingSf(m.id)]).filter(([,p,q])=>p.n>0||q.n>0);setDoc(gdoc("meetings",d),{date:d});const t0=Date.now();while(!dates().includes(d)&&Date.now()-t0<2000)await new Promise(r=>setTimeout(r,40));if(pre.length)await bulk(pre.map(([m,p,q])=>[gdoc("entries",d+"_"+m.id),{date:d,memberId:m.id,attendance:"",savings:p.amt,prepaid:p.amt,socialFund:q.amt,sfPrepaid:q.amt,totalFines:0,totalPaid:0}]))}
   S.date=d;S.tab="meeting";S.msub="week";shell();
 }
+function pendingSf(mid){const es=S.entries.filter(e=>e.memberId===mid),cr=sumA(es,e=>N(e.sfAdvance)-N(e.sfPrepaid)),a=es.filter(e=>N(e.sfAdvance)>0).sort((x,y)=>x.date<y.date?1:-1)[0],w=N(a?.sfAdvanceWeekly);return{n:cr>0&&w?Math.ceil(cr/w):0,amt:Math.min(w,cr)}}
 function pending(mid){const es=S.entries.filter(e=>e.memberId===mid),cr=sumA(es,e=>N(e.advance)-N(e.prepaid)),a=es.filter(e=>N(e.advance)>0).sort((x,y)=>x.date<y.date?1:-1)[0],w=N(a?.advanceWeekly);return{credit:cr,weekly:w,n:cr>0&&w?Math.ceil(cr/w):0,amt:Math.min(w,cr)}}
 const MS=[["week","Week sheet"],["sheet","Roll call"],["cal","Calendar"],["cash","Cash"]];
 const msg=()=>seg(MS,S.msub,"msub");
@@ -290,7 +292,7 @@ async function moveMeeting(a,b){
 /* ---------- CASH BOOK ---------- */
 function cash(d){
   const es=S.entries.filter(e=>e.date===d),ex=S.expenses.filter(x=>x.date===d);
-  const r={reg:sumE(es,"registration"),ret:sumE(es,"retention"),sav:sumA(es,e=>N(e.savings)-N(e.prepaid)),adv:sumE(es,"advance"),pre:sumE(es,"prepaid"),sf:sumE(es,"socialFund"),fee:sumE(es,"loanFormFee"),fin:es.reduce((a,e)=>a+fines(e),0),rep:sumE(es,"loanRepayment"),loan:sumE(es,"loanTaken"),exs:ex,exp:ex.reduce((a,x)=>a+N(x.amount),0),expSoc:ex.filter(x=>x.fund==="Social fund").reduce((a,x)=>a+N(x.amount),0)};
+  const r={reg:sumE(es,"registration"),ret:sumE(es,"retention"),sav:sumA(es,e=>N(e.savings)-N(e.prepaid)),adv:sumE(es,"advance"),pre:sumE(es,"prepaid"),sf:sumA(es,cashSf),fee:sumE(es,"loanFormFee"),fin:es.reduce((a,e)=>a+fines(e),0),rep:sumE(es,"loanRepayment"),loan:sumE(es,"loanTaken"),exs:ex,exp:ex.reduce((a,x)=>a+N(x.amount),0),expSoc:ex.filter(x=>x.fund==="Social fund").reduce((a,x)=>a+N(x.amount),0)};
   r.in=r.reg+r.ret+r.sav+r.adv+r.sf+r.fee+r.fin+r.rep;r.net=r.in-r.loan-r.exp;return r;
 }
 function book(){let bal=N(cfg().openingBalance),soc=N(cfg().openingSocial);return dates().map(d=>{const r=cash(d);r.d=d;r.open=bal;r.avail=bal+r.in;bal+=r.net;soc+=r.sf-r.expSoc;r.close=bal;r.socClose=soc;return r})}
@@ -335,7 +337,7 @@ function openEntry(mid){
   const close=()=>{modal();refresh(true)};
   $("#cl").onclick=close;
   $("#sv").onclick=async()=>{const o=get();if(!pre&&o.savings>0&&!chkSav(o.savings))return;if(o.socialFund>0&&!chkSf(o.socialFund))return;
-    try{await setDoc(gdoc("entries",d+"_"+mid),{...o,date:d,memberId:mid,totalFines:fines(o),totalPaid:paid(o)});close();toast("Saved")}catch(x){toast("Could not save: "+x.code)}};
+    try{await setDoc(gdoc("entries",d+"_"+mid),{...o,...(old?{sfPrepaid:N(old.sfPrepaid),sfAdvance:N(old.sfAdvance),sfAdvanceWeeks:N(old.sfAdvanceWeeks),sfAdvanceWeekly:N(old.sfAdvanceWeekly)}:{}),date:d,memberId:mid,totalFines:fines(o),totalPaid:paid(o)});close();toast("Saved")}catch(x){toast("Could not save: "+x.code)}};
   if(old)$("#rm").onclick=async()=>{if(confirm("Clear this record?")){await deleteDoc(gdoc("entries",d+"_"+mid));close()}};
 }
 
@@ -353,25 +355,36 @@ function fineForm(mid){
   $("#fzc").onclick=()=>{modal();refresh(true)};
   $("#fzs").onclick=()=>{saveEntry(mid,x=>{T.forEach(([k])=>x[k]=$("#fz_"+k).checked?N(c[k]):0);x.otherFines=N($("#fz_o").value)});modal();setTimeout(()=>refresh(true),200)};
 }
+function aheadForm(mid,k,tot){
+  const m=mOf(mid),e=S.entries.find(x=>x.id===S.date+"_"+mid)||{},c=cfg(),sv=k==="sav",hi=N(sv?c.savMax:c.sfMax),nm=sv?"Savings":"Social fund",
+    cur=sv?{w:N(e.advanceWeekly),n:N(e.advanceWeeks)}:{w:N(e.sfAdvanceWeekly),n:N(e.sfAdvanceWeeks)};
+  modal(`<h2>#${m.memberNo} ${esc(m.name)}</h2><div class="sub">${nm} paid ahead · ${fmt(S.date)}</div>${inp("ah_t","Total handed in today","number",tot||(cur.n?cur.w*(cur.n+1):""))}${inp("ah_w","Amount per week ("+(sv?"even, ":"")+money(sv?c.savMin:c.sfMin)+" to "+money(hi)+")","number",cur.w||hi)}<div class="box" id="ah_r"></div><button class="pri" id="ahs">Save</button><button class="sec" id="ahc">Cancel</button>${cur.n?`<button class="lnk" id="ahx">Clear ${nm.toLowerCase()} for this week and ahead</button>`:""}`);
+  const calc=()=>{const t=N($("#ah_t").value),w=N($("#ah_w").value),n=w?t/w:0,ok=Number.isInteger(n)&&n>=1&&n<=52;$("#ah_r").innerHTML=ok?`${n} week(s): this week${n>1?" + "+(n-1)+" weeks ahead":""}`:"The total must be a whole number of weeks";return{t,w,n,ok}};
+  $("#md").querySelectorAll("input").forEach(i=>i.oninput=calc);calc();
+  const put=(x,w,n)=>{if(sv){x.savings=w;x.advance=n>1?w*(n-1):0;x.advanceWeeks=n>1?n-1:0;x.advanceWeekly=n>1?w:0}else{x.socialFund=w;x.sfAdvance=n>1?w*(n-1):0;x.sfAdvanceWeeks=n>1?n-1:0;x.sfAdvanceWeekly=n>1?w:0}},done=()=>{modal();setTimeout(()=>refresh(true),200)};
+  $("#ahc").onclick=()=>{modal();refresh(true)};
+  $("#ahs").onclick=()=>{const r=calc();if(!r.ok)return toast("The total must be a whole number of weeks");if(!(sv?chkSav(r.w):chkSf(r.w)))return;saveEntry(mid,x=>put(x,r.w,r.n));done()};
+  if(cur.n)$("#ahx").onclick=()=>{saveEntry(mid,x=>put(x,0,0));done()};
+}
 const vWeek=()=>{
   const ds=dates();if(!ds.length)return body(msg()+noMeet);
   if(!ds.includes(S.date))S.date=ds[ds.length-1];
   const d=S.date,c=cfg(),first=d===ds[0],act=mem().filter(m=>m.status!=="Inactive"),EM=Object.fromEntries(S.entries.filter(e=>e.date===d).map(e=>[e.memberId,e])),L=loans(d).filter(l=>l.date<=d),att={Present:"P",Late:"L",Absent:"A"};
   const ip=(m,f,v,x="")=>`<input type="number" inputmode="numeric" min="0" data-m="${m}" data-f="${f}" value="${N(v)||""}" ${x}>`;
   const rows=act.map(m=>{const e=EM[m.id]||{},pb=probation(m,d),pre=N(e.prepaid)>0,adv=N(e.advance)>0,ow=L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0);
-    return `<tr data-r="${m.id}" data-s="${esc((m.memberNo+" "+m.name).toLowerCase())}"><td class="stk"><b>${m.memberNo}</b> ${esc(m.name)}${m.memberType==="New"?` <span class="bd">New</span>`:""}${ow?`<br><small class="low">owes ${money(ow)}</small>`:""}</td><td><select data-m="${m.id}" data-f="attendance" aria-label="Attendance">${["","Present","Late","Absent"].map(x=>`<option value="${x}" ${e.attendance===x?"selected":""}>${att[x]||"–"}</option>`).join("")}</select></td>${first?`<td>${ip(m.id,"registration",e.registration,`placeholder="${regFor(m)||""}"`)}</td><td>${ip(m.id,"retention",e.retention)}</td>`:""}<td>${pb?`<small>Probation</small>`:pre?`<small>Prepaid ${money(e.savings)}</small>`:adv?`<small>+${e.advanceWeeks} wks ahead</small>`:ip(m.id,"savings",e.savings)}</td><td>${ip(m.id,"socialFund",e.socialFund)}</td><td>${ip(m.id,"loanRepayment",e.loanRepayment)}</td><td><button class="fb" data-fm="${m.id}" data-fb="${m.id}">${fines(e)?money(fines(e)):"+"}</button></td><td class="num" data-p="${m.id}">${EM[m.id]?money(paid(e)):""}</td><td><button class="dots" style="width:36px" data-m2="${m.id}" aria-label="More details">⋯</button></td></tr>`}).join("");
-  body(msg()+`<div class="box">${picker(ds,d)}<div class="r2"><button class="sec" id="cd">Change date</button><button class="sec" id="allp">All present</button></div>${first?`<button class="sec" id="fillreg">Fill registration fees (old ${money(c.registrationFee)} / new ${money(c.registrationFeeNew)})</button>`:""}<input id="wq" placeholder="Search name or ID" style="margin:8px 0 0" aria-label="Search member"></div><div class="brush"><div class="stat wide" id="wst"></div></div><div class="tw ws"><table><tr><th class="stk">Member</th><th>Att</th>${first?"<th>Registration</th><th>Retention</th>":""}<th>Savings</th><th>Social fund</th><th>Loan refund</th><th>Fines</th><th>Paid</th><th></th></tr>${rows}</table></div><p class="sub">Type amounts and press Enter to go to the next member. Entries save automatically and other details on a member's record stay as they are. New members do not pay savings during their ${N(c.probationWeeks)||3}-week probation.</p>`);
-  const ft=()=>{const r=cash(d),es=S.entries.filter(e=>e.date===d);$("#wst").innerHTML=`<small>Money in this week</small><span class="num">UGX ${money(r.in)}</span><div class="sub">Savings ${money(r.sav+r.adv)} · Social ${money(r.sf)} · Loan refund ${money(r.rep)} · Fines ${money(r.fin)}</div>`;
+    return `<tr data-r="${m.id}" data-s="${esc((m.memberNo+" "+m.name).toLowerCase())}"><td class="stk"><b>${m.memberNo}</b> ${esc(m.name)}${m.memberType==="New"?` <span class="bd">New</span>`:""}${ow?`<br><small class="low">owes ${money(ow)}</small>`:""}</td><td><select data-m="${m.id}" data-f="attendance" aria-label="Attendance">${["","Present","Late","Absent"].map(x=>`<option value="${x}" ${e.attendance===x?"selected":""}>${att[x]||"–"}</option>`).join("")}</select></td>${first?`<td>${ip(m.id,"registration",e.registration,`placeholder="${regFor(m)||""}"`)}</td><td>${ip(m.id,"retention",e.retention)}</td>`:""}<td>${pb?`<small>Probation</small>`:pre?`<small>Prepaid ${money(e.savings)}</small>`:adv?`<button class="fb" data-ah="sav:${m.id}">+${e.advanceWeeks} wks · ${money(N(e.savings)+N(e.advance))}</button>`:ip(m.id,"savings",e.savings)}</td><td>${N(e.sfPrepaid)>0?`<small>Prepaid ${money(e.socialFund)}</small>`:N(e.sfAdvance)>0?`<button class="fb" data-ah="sf:${m.id}">+${e.sfAdvanceWeeks} wks · ${money(N(e.socialFund)+N(e.sfAdvance))}</button>`:ip(m.id,"socialFund",e.socialFund)}</td><td>${ip(m.id,"loanRepayment",e.loanRepayment)}</td><td>${ip(m.id,"loanTaken",e.loanTaken)}</td><td><button class="fb" data-fm="${m.id}" data-fb="${m.id}">${fines(e)?money(fines(e)):"+"}</button></td><td class="num" data-p="${m.id}">${EM[m.id]?money(paid(e)):""}</td><td><button class="dots" style="width:36px" data-m2="${m.id}" aria-label="More details">⋯</button></td></tr>`}).join("");
+  body(msg()+`<div class="box">${picker(ds,d)}<div class="r2"><button class="sec" id="cd">Change date</button><button class="sec" id="allp">All present</button></div>${first?`<button class="sec" id="fillreg">Fill registration fees (old ${money(c.registrationFee)} / new ${money(c.registrationFeeNew)})</button>`:""}<input id="wq" placeholder="Search name or ID" style="margin:8px 0 0" aria-label="Search member"></div><div class="brush"><div class="stat wide" id="wst"></div></div><div class="tw ws"><table><tr><th class="stk">Member</th><th>Att</th>${first?"<th>Registration</th><th>Retention</th>":""}<th>Savings</th><th>Social fund</th><th>Loan refund</th><th>Loan taken</th><th>Fines</th><th>Paid</th><th></th></tr>${rows}</table></div><p class="sub">Type amounts and press Enter to go to the next member. Entries save automatically and other details on a member's record stay as they are. New members do not pay savings during their ${N(c.probationWeeks)||3}-week probation.</p>`);
+  const ft=()=>{const r=cash(d),es=S.entries.filter(e=>e.date===d);$("#wst").innerHTML=`<small>Money in this week</small><span class="num">UGX ${money(r.in)}</span><div class="sub">Savings ${money(r.sav+r.adv)} · Social ${money(r.sf)} · Loan refund ${money(r.rep)} · Fines ${money(r.fin)} · Loans given ${money(r.loan)}</div>`;
     document.querySelectorAll("[data-p]").forEach(x=>{const e=es.find(y=>y.memberId===x.dataset.p);x.textContent=e?money(paid(e)):""});
     document.querySelectorAll("[data-fb]").forEach(x=>{const e=es.find(y=>y.memberId===x.dataset.fb);x.textContent=e&&fines(e)?money(fines(e)):"+"})};
   ft();const W=$(".ws");
   W.onchange=ev=>{const t=ev.target,mid=t.dataset.m,f=t.dataset.f;if(!mid||!f)return;let v=t.value;
     if(f==="attendance")saveEntry(mid,e=>{e.attendance=v;e.absentFine=v==="Absent"?N(c.absentFine):0;e.lateFine=v==="Late"?N(c.lateFine):0});
-    else{v=N(v);if(f==="savings"&&v>0&&!chkSav(v)){t.value=t.defaultValue;return}if(f==="socialFund"&&v>0&&!chkSf(v)){t.value=t.defaultValue;return}
-      saveEntry(mid,e=>{e[f]=v;if(f==="savings"){e.advance=0;e.advanceWeeks=0;e.advanceWeekly=0}})}
+    else{v=N(v);if((f==="savings"&&v>N(c.savMax))||(f==="socialFund"&&v>N(c.sfMax))){t.value=t.defaultValue;return aheadForm(mid,f==="savings"?"sav":"sf",v)}if(f==="savings"&&v>0&&!chkSav(v)){t.value=t.defaultValue;return}if(f==="socialFund"&&v>0&&!chkSf(v)){t.value=t.defaultValue;return}
+      saveEntry(mid,e=>{e[f]=v;if(f==="savings"){e.advance=0;e.advanceWeeks=0;e.advanceWeekly=0}if(f==="socialFund"){e.sfAdvance=0;e.sfAdvanceWeeks=0;e.sfAdvanceWeekly=0}if(f==="loanTaken"&&v>0){e.loanMonthlyRate=e.loanMonthlyRate??c.loanMonthlyRate;if(!N(e.loanFormFee)&&N(c.loanFormFee))e.loanFormFee=N(c.loanFormFee)}})}
     setTimeout(ft,150)};
   W.onkeydown=ev=>{if(ev.key!=="Enter"||ev.target.tagName!=="INPUT")return;ev.preventDefault();const all=[...W.querySelectorAll(`input[data-f="${ev.target.dataset.f}"]:not([disabled])`)],n=all[all.indexOf(ev.target)+1];if(n){n.focus();n.select()}else ev.target.blur()};
-  W.onclick=ev=>{const b=ev.target.closest("[data-fm],[data-m2]");if(b){if(b.dataset.fm)fineForm(b.dataset.fm);else openEntry(b.dataset.m2)}};
+  W.onclick=ev=>{const b=ev.target.closest("[data-fm],[data-m2],[data-ah]");if(b){if(b.dataset.ah){const[k,id]=b.dataset.ah.split(":");aheadForm(id,k)}else if(b.dataset.fm)fineForm(b.dataset.fm);else openEntry(b.dataset.m2)}};
   $("#wq").oninput=ev=>{const q=ev.target.value.toLowerCase();W.querySelectorAll("tr[data-r]").forEach(r=>r.classList.toggle("hide",!!q&&!r.dataset.s.includes(q)))};
   $("#mpk").onchange=ev=>{S.date=ev.target.value;vWeek()};
   $("#cd").onclick=()=>{const n=prompt("New date (YYYY-MM-DD)",d);if(n&&/^\d{4}-\d\d-\d\d$/.test(n))moveMeeting(d,n);else if(n)toast("Use the format YYYY-MM-DD")};
@@ -426,7 +439,7 @@ const r=ev(cx);$('#ce').textContent=cx.replace(/\//g,'÷').replace(/\*/g,'×').r
 function fund(){const c=cfg(),L=loans(),sv=sumA(S.entries,cashSav),prof=sumA(L,l=>Math.max(0,l.repaid-l.amount)),ff=N(c.shareFines)?S.entries.reduce((a,e)=>a+fines(e),0)+sumE(S.entries,"loanFormFee"):0,exp=S.expenses.filter(x=>x.fund!=="Social fund").reduce((a,x)=>a+N(x.amount),0),star=N(c.starValue)||2000,pool=Math.max(0,sv+prof+ff-exp),stars=sv/star;return{L,sv,prof,shareFF:ff,exp,star,pool,stars,per:stars?pool/stars:0}}
 function memberRows(){const F=fund();
   return mem().map(m=>{const es=S.entries.filter(e=>e.memberId===m.id),att=es.filter(e=>e.attendance),sv=sumA(es,cashSav),stars=sv/F.star;
-    return {m,es,sv,stars,ret:sumE(es,"retention"),sf:sumE(es,"socialFund"),fi:es.reduce((a,e)=>a+fines(e),0),out:F.L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0),ap:att.length?Math.round(att.filter(e=>e.attendance!=="Absent").length/att.length*100):null,pay:stars*F.per}});
+    return {m,es,sv,stars,ret:sumE(es,"retention"),sf:sumA(es,cashSf),fi:es.reduce((a,e)=>a+fines(e),0),out:F.L.filter(l=>l.mid===m.id).reduce((a,l)=>a+l.out,0),ap:att.length?Math.round(att.filter(e=>e.attendance!=="Absent").length/att.length*100):null,pay:stars*F.per}});
 }
 async function newCycle(){const F=fund();if(F.L.some(l=>l.out>0)&&!confirm("Some loans are not cleared. Continue anyway?"))return;
   if(!confirm("A backup file downloads first. Then a new cycle starts: totals, loans and the box restart from the date you choose. Old records stay in the database."))return;
@@ -441,7 +454,7 @@ V.home=()=>{
   const t=iso(new Date()),dw=new Date().getDay(),nx=new Date();nx.setDate(nx.getDate()+(7-dw)%7);
   let tg,lab;if(ds.includes(t)){tg=t;lab="Open today's saving week"}else if(dw===0||dw===6){tg=t;lab="Start today's saving week"}else{tg=iso(nx);lab="Start meeting: "+fmt(tg)}
   const l8=ds.slice(-8),v=l8.map(d=>cash(d).sav),mx=Math.max(...v,1),over=L.filter(l=>l.status==="Overdue"),ab=ds.length?S.entries.filter(e=>e.date===ds[ds.length-1]&&e.attendance==="Absent"):[];
-  body(`<div class="cards">${card("Money in the box","UGX "+money(box),{w:1,g:"money:cb"})}${card("Total savings",money(sumA(S.entries,cashSav)),{g:"rep:share"})}${card("Social fund",money(T("socialFund")),{g:"money:sf"})}${card("Loans outstanding",money(out),{g:"money:loans"})}${card("Interest earned",money(ip),{g:"money:loans"})}${card("Fines",money(S.entries.reduce((a,e)=>a+fines(e),0)),{g:"money:fines"})}${card("Expenses",money(exp),{g:"money:exp"})}${card("Members",mem().filter(m=>m.status!=="Inactive").length,{g:"members"})}${card("Last meeting savings",money(lb?lb.sav+lb.adv:0),{g:"meeting:cash"})}</div>
+  body(`<div class="cards">${card("Money in the box","UGX "+money(box),{w:1,g:"money:cb"})}${card("Total savings",money(sumA(S.entries,cashSav)),{g:"rep:share"})}${card("Social fund",money(sumA(S.entries,cashSf)),{g:"money:sf"})}${card("Loans outstanding",money(out),{g:"money:loans"})}${card("Interest earned",money(ip),{g:"money:loans"})}${card("Fines",money(S.entries.reduce((a,e)=>a+fines(e),0)),{g:"money:fines"})}${card("Expenses",money(exp),{g:"money:exp"})}${card("Members",mem().filter(m=>m.status!=="Inactive").length,{g:"members"})}${card("Last meeting savings",money(lb?lb.sav+lb.adv:0),{g:"meeting:cash"})}</div>
   <button class="btn big" data-act="open" data-arg="${tg}">${lab}</button>${tg!==t&&!ds.includes(t)?`<button class="btn" data-act="open" data-arg="${t}">Start a meeting today (${fmt(t)})</button>`:""}
   ${l8.length?`<h3>Savings, last ${l8.length} meetings</h3><div class="bars">${v.map(x=>`<div style="height:${x/mx*100}%"></div>`).join("")}</div><div class="lab">${l8.map(d=>`<small>${d.slice(8)}/${d.slice(5,7)}</small>`).join("")}</div>`:""}
   <h3>Loans overdue (${over.length})</h3>${over.map(l=>item(esc(mOf(l.mid).name),"due "+l.dueDate,money(l.out),["go","money:loans"],"low")).join("")||empty("No overdue loans")}
