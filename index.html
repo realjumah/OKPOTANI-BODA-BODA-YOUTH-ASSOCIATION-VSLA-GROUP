@@ -53,7 +53,14 @@ import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmai
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,writeBatch,onSnapshot,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* PASTE YOUR FIREBASE CONFIG HERE (Project settings > Your apps > Web) */
-const firebaseConfig = {apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",projectId:"YOUR_PROJECT",appId:"YOUR_APP_ID"};
+const firebaseConfig = {
+  apiKey: "AIzaSyAa46jt-G7Ma4aH8MHxvPnLf13L2yvgFpM",
+  authDomain: "vsla-app-d70dd.firebaseapp.com",
+  projectId: "vsla-app-d70dd",
+  storageBucket: "vsla-app-d70dd.firebasestorage.app",
+  messagingSenderId: "797658721016",
+  appId: "1:797658721016:web:a05a0d765d218d543da90d"
+};
 
 const app=initializeApp(firebaseConfig), auth=getAuth(app);
 const db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
@@ -261,3 +268,5 @@ V.tools=()=>{
 </script>
 </body>
 </html>
+
+
