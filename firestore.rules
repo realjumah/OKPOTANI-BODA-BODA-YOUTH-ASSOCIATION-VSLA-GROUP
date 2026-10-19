@@ -1,0 +1,110 @@
+rules_version = '2';
+
+// VSLA Group Book: Firestore security rules with the 14-day trial and monthly subscription.
+// Publish in: Firebase console -> Firestore Database -> Rules -> delete everything -> paste this -> Publish.
+//
+// What these rules do:
+//  - A group's records can only be read by the account that owns the group.
+//  - After the 14-day trial, the owner can still READ their records (view and download)
+//    but the SERVER refuses every change until the subscription is paid.
+//  - Billing status can only be changed by the admin (you). Clients can only create their own
+//    one-time trial record and send payment details for you to approve.
+//  - Being admin = a document admins/<your uid> that you create by hand in the Firebase console.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    // True while the free trial is running, or a payment covers today, or the account is free.
+    function billingOk(uid) {
+      let b = get(/databases/$(database)/documents/billing/$(uid)).data;
+      return b.free == true
+        || (b.paidUntil != null && request.time < b.paidUntil)
+        || request.time < b.trialStart + duration.value(b.trialDays, 'd');
+    }
+    function ownsGroup(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)).data.ownerId == request.auth.uid;
+    }
+
+    // ---- The savings group and all its records -------------------------------------------------
+    match /groups/{gid} {
+      allow read: if signedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid
+        && billingOk(request.auth.uid);
+      allow update, delete: if signedIn() && resource.data.ownerId == request.auth.uid
+        && (isAdmin() || billingOk(request.auth.uid));
+
+      // members, meetings, entries, expenses
+      match /{sub=**} {
+        allow read: if signedIn() && ownsGroup(gid);
+        allow write: if signedIn() && ownsGroup(gid) && (isAdmin() || billingOk(request.auth.uid));
+      }
+    }
+
+    // ---- Subscription ------------------------------------------------------------------------
+    // Billing status. The owner may create it ONCE, only as a fresh 14-day trial at the server's time.
+    match /billing/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isAdmin() || (signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['plan', 'trialStart', 'trialDays', 'paidUntil', 'free', 'phone'])
+        && request.resource.data.plan == 'group'
+        && request.resource.data.trialStart == request.time
+        && request.resource.data.trialDays == 14
+        && request.resource.data.paidUntil == null
+        && request.resource.data.free == false);
+      allow update, delete: if isAdmin();
+    }
+
+    // Payment details a client sends after paying by mobile money. Only the admin can approve or reject.
+    match /payments/{pid} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'txn', 'from', 'amount', 'months', 'name', 'status', 'at'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.txn is string && request.resource.data.txn.size() >= 3 && request.resource.data.txn.size() <= 40
+        && request.resource.data.from is string && request.resource.data.from.size() <= 20
+        && request.resource.data.name is string && request.resource.data.name.size() <= 120
+        && request.resource.data.months is int && request.resource.data.months >= 1 && request.resource.data.months <= 12
+        && request.resource.data.amount is number
+        && request.resource.data.at == request.time;
+      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Where to pay (mobile money number, registered name, monthly price).
+    match /platform/{docId} {
+      allow get: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Messages from the admin to one client (to = their uid) or to everyone (to = 'all').
+    match /notices/{nid} {
+      allow read: if signedIn() && (resource.data.to == 'all' || resource.data.to == request.auth.uid || isAdmin());
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['to', 'title', 'body', 'at'])
+        && request.resource.data.to is string
+        && request.resource.data.title is string && request.resource.data.title.size() <= 120
+        && request.resource.data.body is string && request.resource.data.body.size() <= 1000
+        && request.resource.data.at == request.time;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Admin marker. Create it by hand in the console; nobody can create or change it from the app.
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
